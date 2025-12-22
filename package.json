@@ -1,5 +1,5 @@
 {
-  "name": "hilton's blog",
+  "name": "finance",
   "version": "2.3.0",
   "private": true,
   "scripts": {
@@ -120,5 +120,5 @@
       "prettier --write"
     ]
   },
-  "packageManager": "yarn@3.6.1"
+  "packageManager": "yarn@1.22.22"
 }
