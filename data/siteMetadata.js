@@ -1,6 +1,6 @@
 /** @type {import("pliny/config").PlinyConfig } */
 const siteMetadata = {
-  title: "Hilton's Blog",
+  title: "Hilton's Finance",
   author: 'Hilton Chiang',
   headerTitle: 'HiltonChiang 蔣玉明',
   description: "Hello, I am Hilton Chiang. I leveraged Next.js and Tailwind CSS to create this personal online presence. Through Chinese poems, I convey my thoughts and perspectives, and I hope you enjoy them.",
