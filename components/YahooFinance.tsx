@@ -119,6 +119,7 @@ const YF = async ({ symbol, options }: YFProps) => {
     const openCloseColor = openCloseDelta > 0 ? 'green' : 'red'
     const openCloseT = openCloseDelta > 0 ? openCloseDelta : -openCloseDelta
     const openCloseP = `${openCloseT.toFixed(0)}%`
+    const interLeft = openCloseDelta > 0 ? dayCloseP : dayOpenP
     const intraDayDelta = M.regularMarketPrice - Q.regularMarketPreviousClose
     const intraDayP = (intraDayDelta / Q.regularMarketPreviousClose) * 100
     const intraDayDiff =
@@ -201,7 +202,7 @@ const YF = async ({ symbol, options }: YFProps) => {
               <div className="absolute bottom-0 left-0 -ml-0.5 h-1 w-full translate-y-2 transform bg-blue-300" />
               <div
                 className="absolute bottom-0 -ml-0.5 h-1 translate-y-2 transform"
-                style={{ left: dayOpenP, backgroundColor: openCloseColor, width: openCloseP }}
+                style={{ left: interLeft, backgroundColor: openCloseColor, width: openCloseP }}
               />
               <div className="text-left text-xs md:text-base">{M.regularMarketDayLow}</div>
               <div className="text-center text-xs md:text-base">InterDay</div>
