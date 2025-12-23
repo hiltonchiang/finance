@@ -16,7 +16,7 @@ export async function getOpenCloseTime() {
     const month = date.toLocaleString('en-US', { timeZone: 'America/New_York', month: 'numeric' })
     const day = date.toLocaleString('en-US', { timeZone: 'America/New_York', day: 'numeric' })
     const hour = date.toLocaleString('en-US', { timeZone: 'America/New_York', hour: 'numeric' })
-    date = new Date(`${year}-${month}-${day}T04:00:00-05:00`)
+    // date = new Date(`${year}-${month}-${day}T04:00:00-05:00`)
     if (date.getDay() === 0 || date.getDay() === 6) {
       date = new Date(date.getTime() - 24 * 60 * 60 * 1000)
       continue
@@ -25,23 +25,30 @@ export async function getOpenCloseTime() {
     }
   }
   const year = date.toLocaleString('en-US', { timeZone: 'America/New_York', year: 'numeric' })
-  const month = date.toLocaleString('en-US', { timeZone: 'America/New_York', month: 'numeric' })
-  const day = date.toLocaleString('en-US', { timeZone: 'America/New_York', day: 'numeric' })
-  const hour = date.toLocaleString('en-US', { timeZone: 'America/New_York', hour: 'numeric' })
+  const month = date.toLocaleString('en-US', { timeZone: 'America/New_York', month: '2-digit' })
+  const day = date.toLocaleString('en-US', { timeZone: 'America/New_York', day: '2-digit' })
+  const hour = date.toLocaleString('en-US', { timeZone: 'America/New_York', hour: 'numeric', hourCycle: 'h23' })
+  const minute = date.toLocaleString('en-US', { timeZone: 'America/New_York', minute: '2-digit' })
+  const second = date.toLocaleString('en-US', { timeZone: 'America/New_York', second: '2-digit' })
   const DOW = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
   let openTime = new Date()
   let closeTime = new Date()
-  if (Number(hour) < 4) {
+  const tod = Number(hour) * 60 * 60 + Number(minute) * 60 + Number(second)
+  console.log('getOpenCloseTime', year, month, day, hour, minute, second, tod)
+  if (tod <= 4 * 60 * 60) {
     openTime = new Date(`${year}-${month}-${day}T04:00:00-05:00`)
     closeTime = new Date(`${year}-${month}-${day}T20:00:00-05:00`)
     openTime = new Date(openTime.getTime() - 24 * 60 * 60 * 1000)
     closeTime = new Date(closeTime.getTime() - 24 * 60 * 60 * 1000)
-  } else if (Number(hour) > 20) {
+    console.log("open/close 1 time", openTime, closeTime)
+  } else if (tod >= 20 * 60 * 60) {
     openTime = new Date(`${year}-${month}-${day}T04:00:00-05:00`)
     closeTime = new Date(`${year}-${month}-${day}T20:00:00-05:00`)
+    console.log("open/close 2 time", openTime, closeTime)
   } else {
     openTime = new Date(`${year}-${month}-${day}T04:00:00-05:00`)
-    closeTime = new Date(date.getTime() + 5 * 60 * 60 * 1000)
+    closeTime = new Date()
+    console.log("open/close 3 time", openTime, closeTime)
   }
   for (let i = 0; i < 7; i++) {
     const towOpen = openTime.getDay()
@@ -68,7 +75,6 @@ export async function getOpenCloseTime() {
     } else {
       break   
     }
-      
   }
   return [openTime, closeTime]
 }
