@@ -1,3 +1,4 @@
+import handleSearchDocumentLoad from '@/components/KbarSearch'
 /** @type {import("pliny/config").PlinyConfig } */
 const siteMetadata = {
   title: "Hilton's Finance",
@@ -104,8 +105,9 @@ const siteMetadata = {
   search: {
     provider: 'kbar', // kbar or algolia
     kbarConfig: {
-      searchDocumentsPath: `${process.env.BASE_PATH || ''}/search.json`, // path to load documents to search
-    },
+      searchDocumentsPath: `${process.env.BASE_PATH || ''}/tickers.json`, // path to load documents to search
+      onSearchDocumentsLoad: handleSearchDocumentLoad,
+    }
     // provider: 'algolia',
     // algoliaConfig: {
     //   // The application ID provided by Algolia
