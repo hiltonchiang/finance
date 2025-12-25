@@ -229,11 +229,10 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
           formatter: function (val) {
             if (val) {
               let v = val / 1000000
-              if (v < 0.001) v = val /1000
+              if (v < 0.001) v = val / 1000
               return v.toFixed(2)
             }
-            console.log('formatter val', val)
-            return NaN
+            return ''
           },
         },
         title: {
