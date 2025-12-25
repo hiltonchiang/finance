@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
 import { Menu, RadioGroup, Transition } from '@headlessui/react'
+import emitter from '@/components/Emitter'
 
 const Sun = () => (
   <svg
@@ -52,7 +53,18 @@ const ThemeSwitch = () => {
 
   // When mounted on client, now we can show the UI
   useEffect(() => setMounted(true), [])
-
+  const darkClicked = () => {
+    console.log('ThemeSeitch darkClicked')
+    emitter.emit('setTheme', { theme: 'dark', timestamp: Date.now() })
+  }
+  const lightClicked = () => {
+    console.log('ThemeSeitch lightClicked')
+    emitter.emit('setTheme', { theme: 'light', timestamp: Date.now() })
+  }
+  const systemClicked = () => {
+    console.log('ThemeSeitch systemClicked')
+    emitter.emit('setTheme', { theme: 'system', timestamp: Date.now() })
+  }
   return (
     <div className="mr-5 flex items-center">
       <Menu as="div" className="relative inline-block text-left">
@@ -80,6 +92,7 @@ const ThemeSwitch = () => {
                         className={`${
                           active ? 'bg-primary-600 text-white' : ''
                         } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                        onClick={lightClicked}
                       >
                         <div className="mr-2">
                           <Sun />
@@ -96,6 +109,7 @@ const ThemeSwitch = () => {
                         className={`${
                           active ? 'bg-primary-600 text-white' : ''
                         } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                        onClick={darkClicked}
                       >
                         <div className="mr-2">
                           <Moon />
@@ -112,6 +126,7 @@ const ThemeSwitch = () => {
                         className={`${
                           active ? 'bg-primary-600 text-white' : ''
                         } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                        onClick={systemClicked}
                       >
                         <div className="mr-2">
                           <Monitor />

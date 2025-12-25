@@ -147,7 +147,14 @@ const YF = async ({ symbol, options }: YFProps) => {
       const cPriceLength = M.regularMarketPrice.toFixed(2).length
       const xMove = -1 * (cPriceLength / 2) * 16
       const transX = `translateX(${xMove}px)`
-      return <div className="absolute text-xs md:text-base translate-y-12" style={{ left: dayCloseP, transform: transX }}>{M.regularMarketPrice}</div>
+      return (
+        <div
+          className="absolute translate-y-12 text-xs md:text-base"
+          style={{ left: dayCloseP, transform: transX }}
+        >
+          {M.regularMarketPrice}
+        </div>
+      )
     }
     return (
       <>
@@ -222,8 +229,18 @@ const YF = async ({ symbol, options }: YFProps) => {
                 className="absolute size-3 translate-y-4 transform rounded-full bg-green-500 md:size-4 md:translate-y-6"
                 style={{ left: dayOpenP }}
               />
-              <div className="absolute text-xs md:text-base translate-y-12" style={{ left: dayCloseP }}>{M.regularMarketPrice}</div>
-              <div className="absolute text-xs md:text-base translate-y-12" style={{ left: dayOpenP }}>{Q.regularMarketOpen}</div>
+              <div
+                className="absolute  translate-y-12 text-xs md:text-base"
+                style={{ left: dayCloseP }}
+              >
+                {M.regularMarketPrice}
+              </div>
+              <div
+                className="absolute translate-y-12 text-xs md:text-base"
+                style={{ left: dayOpenP }}
+              >
+                {Q.regularMarketOpen}
+              </div>
             </div>
           </div>
         </div>

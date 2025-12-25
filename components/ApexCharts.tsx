@@ -1,11 +1,12 @@
 'use client'
 import dynamic from 'next/dynamic'
 import { useTheme } from 'next-themes'
-import YahooFinance from 'yahoo-finance2'
-import React, { useState } from 'react'
 import { ApexOptions } from 'apexcharts'
-import { ChartResultArray } from 'yahoo-finance2/esm/src/modules/chart.js'
+import YahooFinance from 'yahoo-finance2'
+import emitter from '@/components/Emitter'
+import React, { useState, useEffect } from 'react'
 import useWindowDimensions from '@/components/WindowDimension'
+import { ChartResultArray } from 'yahoo-finance2/esm/src/modules/chart.js'
 
 const ReactApexChart = dynamic(() => import('react-apexcharts'), {
   ssr: false,
@@ -51,7 +52,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
   const isMobile = width && width <= breakpoint ? true : false
   const [buttonClicked, setButtonClicked] = useState(false)
   const { theme, setTheme, resolvedTheme } = useTheme()
-  // console.log('ApexChart', title, 'data', D)
+  console.log('ApexChart', title, 'data', D)
   const quotesData: CandlestickDataPoint[] = [] as CandlestickDataPoint[]
   const lineData: LineDataPoint[] = [] as LineDataPoint[]
   const lineVolumeData: LineVolumePoint[] = [] as LineVolumePoint[]
@@ -151,6 +152,10 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
       height: 'auto',
       type: 'line', // Default type, can be overridden in series
       stacked: false,
+      background: resolvedTheme === 'dark' ? '#121212' : '#F8F8F8',
+    },
+    theme: {
+      mode: resolvedTheme === 'dark' ? 'dark' : 'light',
     },
     series: [
       {
@@ -222,8 +227,13 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
             colors: '#00E396',
           },
           formatter: function (val) {
-            if (val && val > 1000000) val = val / 10000000
-            return val?.toFixed(2)
+            if (val) {
+              let v = val / 1000000
+              if (v < 0.001) v = val /1000
+              return v.toFixed(2)
+            }
+            console.log('formatter val', val)
+            return NaN
           },
         },
         title: {
@@ -267,6 +277,9 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
             width: '100%', // Ensure it takes the full width of its container
             toolbar: {
               show: false,
+            },
+            zoom: {
+              enabled: false,
             },
           },
           tooltip: {
@@ -326,7 +339,6 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
   function handleButtonClicked(O: CandlestickChartProps) {
     console.log('ApxCharters handleBuffonClicked')
     // CandlestickChart(O.title, O.D)
-    const opt: ApexOptions = options3
     const lineVolumeData: LineVolumePoint[] = [] as LineVolumePoint[]
     for (let i = 0; i < O.D.quotes.length; i++) {
       const Q = O.D.quotes[i]
@@ -339,15 +351,16 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
       x: Date
       y: number | null
     }
-    if (opt.series) {
-      const D1: LVProps[] = [] as LVProps[]
-      const D2: LVProps[] = [] as LVProps[]
-      for (let i = 0; i < lineVolumeData.length; i++) {
-        const L = lineVolumeData[i]
-        D1.push({ x: L.x, y: L.y })
-        D2.push({ x: L.x, y: L.v })
-      }
-      opt.series = [
+    const D1: LVProps[] = [] as LVProps[]
+    const D2: LVProps[] = [] as LVProps[]
+    for (let i = 0; i < lineVolumeData.length; i++) {
+      const L = lineVolumeData[i]
+      D1.push({ x: L.x, y: L.y })
+      D2.push({ x: L.x, y: L.v })
+    }
+    setOptions3({
+      ...options3, // Spread existing options to preserve other settings
+      series: [
         {
           name: 'Stock Price',
           type: 'line',
@@ -360,10 +373,33 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
           data: D2,
           color: '#00E396',
         },
-      ]
-      setOptions3(opt)
-    }
+      ],
+      title: {
+        ...options3.title, // Spread existing title options if any
+        text: O.title,
+      },
+      subtitle: {
+        ...options3.subtitle, // Spread existing subtitle options if any
+        text: O.D.meta.longName,
+      },
+    })
   }
+  useEffect(() => {
+    // await emission of ThemeSwitch
+    emitter.on('setTheme', (data) => {
+      console.log('ApexCharts: Event "setTheme" ', data)
+      setOptions3({
+        ...options3, // Spread existing options to preserve other settings
+        chart: {
+          ...options3,
+          background: data.theme === 'light' ? '#F8F8F8' : '#121212',
+        },
+        theme: {
+          mode: data.theme === 'light' ? 'light' : 'dark',
+        },
+      })
+    })
+  }, [])
   /**
    *
    */

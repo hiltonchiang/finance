@@ -1,5 +1,5 @@
 import YF, { YFProps } from '@/components/YahooFinance'
-import { getChartOptions, getAllTickers } from '@/lib/actions'
+import { getChartOptions } from '@/lib/actions'
 
 export default async function Home() {
   const yfprops: YFProps = await getChartOptions()

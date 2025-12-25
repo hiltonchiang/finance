@@ -9,6 +9,8 @@ import {
   ChartResultArrayQuote,
   ChartOptionsWithReturnArray,
 } from 'yahoo-finance2/esm/src/modules/chart.js'
+import { useEffect } from 'react'
+import emitter from '@/components/Emitter'
 
 /*
 params: {
@@ -286,6 +288,13 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
         break
     }
   }
+  useEffect(() => {
+    console.log('YFD3Button b4 emitter.on')
+    emitter.on('searchTicker', (data) => {
+      console.log('Event "searchTicker" emitted with data:', data)
+      handleButton1D(data.ticker[0], onButtonClicked)
+    })
+  }, []) // The empty depen
   return <></>
 }
 
