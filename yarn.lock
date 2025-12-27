@@ -1579,6 +1579,11 @@
   resolved "https://repo.huaweicloud.com/repository/npm/@emotion/weak-memoize/-/weak-memoize-0.4.0.tgz#5e13fac887f08c44f76b0ccaf3370eb00fec9bb6"
   integrity sha512-snKqtPW01tN0ui7yu9rGv69aJXr/a/Ywvl11sUjNtEcRc+ng/mQriFL0wLXMef74iHa/EkftbDzU9F8iFbH+zg==
 
+"@epic-web/invariant@^1.0.0":
+  version "1.0.0"
+  resolved "https://repo.huaweicloud.com/repository/npm/@epic-web/invariant/-/invariant-1.0.0.tgz#1073e5dee6dd540410784990eb73e4acd25c9813"
+  integrity sha512-lrTPqgvfFQtR/eY/qkIzp98OGdNJu0m5ji3q/nJI8v3SXkRKEnWiOxMmbvcSoAIzv/cGiuvRy57k4suKQSAdwA==
+
 "@esbuild-plugins/node-resolve@^0.2.2":
   version "0.2.2"
   resolved "https://repo.huaweicloud.com/repository/npm/@esbuild-plugins/node-resolve/-/node-resolve-0.2.2.tgz#4f1b8d265a1b6e8b2438a03770239277687f0c17"
@@ -6349,6 +6354,11 @@ citeproc@^2.4.6, citeproc@^2.4.63:
   resolved "https://repo.huaweicloud.com/repository/npm/citeproc/-/citeproc-2.4.63.tgz#de6d30646e264f96b39cedb526f231abe1a5a718"
   integrity sha512-68F95Bp4UbgZU/DBUGQn0qV3HDZLCdI9+Bb2ByrTaNJDL5VEm9LqaiNaxljsvoaExSLEXe1/r6n2Z06SCzW3/Q==
 
+cities.json@^1.1.50:
+  version "1.1.50"
+  resolved "https://repo.huaweicloud.com/repository/npm/cities.json/-/cities.json-1.1.50.tgz#326e1aaecabc9ad3c680e6d9b3bba31be54e4f31"
+  integrity sha512-ZsCgxtaSyU66bGSwSUl1PZzP2BHxzwvNkjolxb3HIYmbYsaeq+k3wZt2De16HswQHGHY1agRwpSWenkWeLrzfg==
+
 class-variance-authority@^0.7.1:
   version "0.7.1"
   resolved "https://repo.huaweicloud.com/repository/npm/class-variance-authority/-/class-variance-authority-0.7.1.tgz#4008a798a0e4553a781a57ac5177c9fb5d043787"
@@ -6672,6 +6682,14 @@ crc-32@~1.2.0, crc-32@~1.2.1:
   version "1.2.2"
   resolved "https://repo.huaweicloud.com/repository/npm/crc-32/-/crc-32-1.2.2.tgz#3cad35a934b8bf71f25ca524b6da51fb7eace2ff"
   integrity sha512-ROmzCKrTnOwybPcJApAA6WBWij23HVfGVNKqqrZpuyZOHqK2CwHSvpGuyt/UNNvaIjEd8X5IFGp4Mh+Ie1IHJQ==
+
+cross-env@^10.1.0:
+  version "10.1.0"
+  resolved "https://repo.huaweicloud.com/repository/npm/cross-env/-/cross-env-10.1.0.tgz#cfd2a6200df9ed75bfb9cb3d7ce609c13ea21783"
+  integrity sha512-GsYosgnACZTADcmEyJctkJIoqAhHjttw7RsFrVoJNXbsWWqaq6Ym+7kZjq6mS45O0jij6vtiReppKQEtqWy6Dw==
+  dependencies:
+    "@epic-web/invariant" "^1.0.0"
+    cross-spawn "^7.0.6"
 
 cross-env@^7.0.3:
   version "7.0.3"
@@ -9114,6 +9132,11 @@ imurmurhash@^0.1.4:
   version "0.1.4"
   resolved "https://repo.huaweicloud.com/repository/npm/imurmurhash/-/imurmurhash-0.1.4.tgz#9218b9b2b928a238b13dc4fb6b6d576f231453ea"
   integrity sha512-JmXMZ6wuvDmLiHEml9ykzqO6lwFbof0GG4IkcGaENdCRDDmMVnny7s5HsIgHCbaq0w2MyPhDqkhTUgS2LU2PHA==
+
+indicatorts@^2.2.2:
+  version "2.2.2"
+  resolved "https://repo.huaweicloud.com/repository/npm/indicatorts/-/indicatorts-2.2.2.tgz#8d0ebec82d9587ff02297c58031aa08cd5f2fb1f"
+  integrity sha512-oJRe83n2zj826Mlp2RKQVfurqbq5dEHzAWgZidiYkS0mrx3GCbXlNj59YtwZvekRmNwi/d4NdeHGHd8Nspl6Xg==
 
 inflection@^3.0.0:
   version "3.0.2"
@@ -14024,6 +14047,18 @@ tr46@~0.0.3:
   version "0.0.3"
   resolved "https://repo.huaweicloud.com/repository/npm/tr46/-/tr46-0.0.3.tgz#8184fd347dac9cdc185992f3a6622e14b9d9ab6a"
   integrity sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==
+
+trading-signals@7.2.0, trading-signals@^7.2.0:
+  version "7.2.0"
+  resolved "https://repo.huaweicloud.com/repository/npm/trading-signals/-/trading-signals-7.2.0.tgz#841dc11edec2d89f233debf747520797bbe0a7d5"
+  integrity sha512-IfrAHTIB9LJdQq9psPm34VC+tMSXIvZS0JRbOMXx2Av+1JtGpcOL2tIBVum9/bU8RuFdZHK4keFgYUdnUPKcnQ==
+
+trading-strategies@^0.1.0:
+  version "0.1.0"
+  resolved "https://repo.huaweicloud.com/repository/npm/trading-strategies/-/trading-strategies-0.1.0.tgz#23e6b42d90fefd18bd6e1400bf2d6b21c69ae737"
+  integrity sha512-agjktEax/x0/6Gv4b6cj9bYjJJcfQsuub9ePc+5mSDjog7oZALknbBO0XNj2+Hm7DFGbMxKwaW88q7jklCjLuw==
+  dependencies:
+    trading-signals "7.2.0"
 
 tree-dump@^1.0.3, tree-dump@^1.1.0:
   version "1.1.0"

@@ -159,9 +159,11 @@ const YF = async ({ symbol, options }: YFProps) => {
     return (
       <>
         <CandlestickChart title={symbol} D={results} />
-        <div className="space-y-4">
+        <div id="yahooFinance" className="space-y-4">
           <Buttons />
-          <div className="text-sm md:text-base">Core Data</div>
+          <div id="CoreData" className="flex items-center justify-between text-sm md:text-base">
+            Core Data
+          </div>
           {/* Intraday compare*/}
           <div className="relative grid grid-rows-2 gap-1">
             <div className="absolute bottom-0 left-0 -ml-0.5 h-px w-full translate-y-2 transform bg-blue-300" />

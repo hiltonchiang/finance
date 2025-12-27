@@ -6,21 +6,124 @@ import { YFProps } from '@/components/YahooFinance'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
+const StockHolidays = [
+  new Date('2025-12-25'),
+  new Date('2026-01-01'),
+  new Date('2026-01-19'),
+  new Date('2026-02-16'),
+  new Date('2026-04-03'),
+  new Date('2026-05-25'),
+  new Date('2026-06-19'),
+  new Date('2026-07-03'),
+  new Date('2026-07-04'),
+  new Date('2026-09-07'),
+  new Date('2026-11-26'),
+  new Date('2026-12-25'),
+  new Date('2027-01-01'),
+  new Date('2027-01-18'),
+  new Date('2027-02-15'),
+  new Date('2027-03-26'),
+  new Date('2027-05-19'),
+  new Date('2027-05-31'),
+  new Date('2027-06-18'),
+  new Date('2027-07-04'),
+  new Date('2027-07-05'),
+  new Date('2027-09-06'),
+  new Date('2027-11-25'),
+  new Date('2027-12-25'),
+]
+const isStockHoliday = (today) => {
+  const year = today.toLocaleString('en-US', { timeZone: 'America/New_York', year: 'numeric' })
+  const month = today.toLocaleString('en-US', { timeZone: 'America/New_York', month: 'numeric' })
+  const day = today.toLocaleString('en-US', { timeZone: 'America/New_York', day: 'numeric' })
+  const usToday = new Date(`${year}-${month}-${day}`)
+  for (let i = 0; i < StockHolidays.length; i++) {
+    if (usToday.getTime() === StockHolidays[i].getTime()) {
+      return true
+    }
+  }
+  return false
+}
+/**
+ *
+ */
+const weekDayValue = 'long'
+const options = {
+  timeZone: 'America/New_York',
+  weekday: weekDayValue as 'long' | 'short' | 'narrow',
+}
+/**
+ *
+ */
+const isSaturday = (date) => {
+  const easternDay = date.toLocaleDateString('en-US', options)
+  if (easternDay === 'Saturday') {
+    return true
+  } else {
+    return false
+  }
+}
+/**
+ *
+ */
+const isSunday = (date) => {
+  const easternDay = date.toLocaleDateString('en-US', options)
+  if (easternDay === 'Sunday') {
+    return true
+  } else {
+    return false
+  }
+}
+/**
+ *
+ */
+const getRegularDay = (today): [boolean, Date] => {
+  let D = new Date(today)
+  let backed = false
+  for (let i = 0; i < 7; i++) {
+    if (isStockHoliday(D)) {
+      D = new Date(D.getTime() - 24 * 60 * 60 * 1000)
+      console.log('getRegularDay stockHoliday', D)
+      backed = true
+      continue
+    }
+    if (isSunday(D)) {
+      D = new Date(D.getTime() - 48 * 60 * 60 * 1000)
+      console.log('getRegularDay Sunday', D)
+      backed = true
+      continue
+    }
+    if (isSaturday(D)) {
+      D = new Date(D.getTime() - 24 * 60 * 60 * 1000)
+      console.log('getRegularDay Saturday', D)
+      backed = true
+      continue
+    }
+    break
+  }
+  return [backed, D]
+}
+/**
+ *
+ */
 export async function getOpenCloseTime() {
-  let date = new Date() // UTC time
+  const [dayBacked, date] = getRegularDay(new Date())
+  /**
   for (let i = 0; i < 7; i++) {
     const year = date.toLocaleString('en-US', { timeZone: 'America/New_York', year: 'numeric' })
     const month = date.toLocaleString('en-US', { timeZone: 'America/New_York', month: 'numeric' })
     const day = date.toLocaleString('en-US', { timeZone: 'America/New_York', day: 'numeric' })
     const hour = date.toLocaleString('en-US', { timeZone: 'America/New_York', hour: 'numeric' })
     // date = new Date(`${year}-${month}-${day}T04:00:00-05:00`)
-    if (date.getDay() === 0 || date.getDay() === 6) {
+    if (date.getDay() === 0 || date.getDay() === 6 || isStockHoliday(date)) {
       date = new Date(date.getTime() - 24 * 60 * 60 * 1000)
       continue
     } else {
       break
     }
   }
+  */
+  console.log('getRegularDay', dayBacked, date)
   const year = date.toLocaleString('en-US', { timeZone: 'America/New_York', year: 'numeric' })
   const month = date.toLocaleString('en-US', { timeZone: 'America/New_York', month: '2-digit' })
   const day = date.toLocaleString('en-US', { timeZone: 'America/New_York', day: '2-digit' })
@@ -31,16 +134,18 @@ export async function getOpenCloseTime() {
   })
   const minute = date.toLocaleString('en-US', { timeZone: 'America/New_York', minute: '2-digit' })
   const second = date.toLocaleString('en-US', { timeZone: 'America/New_York', second: '2-digit' })
-  const DOW = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
   let openTime = new Date()
   let closeTime = new Date()
   const tod = Number(hour) * 60 * 60 + Number(minute) * 60 + Number(second)
   console.log('getOpenCloseTime', year, month, day, hour, minute, second, tod)
+  // TODO handle daylight saving time
   if (tod <= 4 * 60 * 60) {
     openTime = new Date(`${year}-${month}-${day}T04:00:00-05:00`)
     closeTime = new Date(`${year}-${month}-${day}T20:00:00-05:00`)
-    openTime = new Date(openTime.getTime() - 24 * 60 * 60 * 1000)
-    closeTime = new Date(closeTime.getTime() - 24 * 60 * 60 * 1000)
+    if (dayBacked === false) {
+      openTime = new Date(openTime.getTime() - 24 * 60 * 60 * 1000)
+      closeTime = new Date(closeTime.getTime() - 24 * 60 * 60 * 1000)
+    }
     console.log('open/close 1 time', openTime, closeTime)
   } else if (tod >= 20 * 60 * 60) {
     openTime = new Date(`${year}-${month}-${day}T04:00:00-05:00`)
@@ -51,6 +156,7 @@ export async function getOpenCloseTime() {
     closeTime = new Date()
     console.log('open/close 3 time', openTime, closeTime)
   }
+  /**
   for (let i = 0; i < 7; i++) {
     const towOpen = openTime.getDay()
     console.log('dow open', DOW[towOpen])
@@ -76,7 +182,7 @@ export async function getOpenCloseTime() {
     } else {
       break
     }
-  }
+  }*/
   return [openTime, closeTime]
 }
 const queryOptions: ChartOptionsWithReturnArray = {
