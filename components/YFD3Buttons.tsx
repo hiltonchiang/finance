@@ -286,13 +286,17 @@ const showCoreData = (name, callback) => {
     const d = openTime - now
     const h = Math.floor(d / 3600)
     const m = Math.floor((d - h * 3600) / 60)
-    coredata.html(`<span>US Market will open ${h} hours ${m} minutes later.</span><span>US Now ${usToday}</span>`)
+    coredata.html(
+      `<span>US Market will open ${h} hours ${m} minutes later.</span><span>US Now ${usToday}</span>`
+    )
     if (now > preMarketTime) handleButton1D(name, callback)
   } else if (now >= openTime && now < closeTime) {
     const d = closeTime - now
     const h = Math.floor(d / 3600)
     const m = Math.floor((d - h * 3600) / 60)
-    coredata.html(`<span>US Market will close ${h} hours ${m} minutes later.</span><span>US Now ${usToday}</span>`)
+    coredata.html(
+      `<span>US Market will close ${h} hours ${m} minutes later.</span><span>US Now ${usToday}</span>`
+    )
     handleButton1D(name, callback)
   } else {
     coredata.html(`<span>US Market is closed.</span><span>US Now ${usToday}</span>`)
