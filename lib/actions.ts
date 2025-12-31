@@ -106,8 +106,21 @@ const getRegularDay = (today): [boolean, Date] => {
 /**
  *
  */
-export async function getOpenCloseTime() {
-  const [dayBacked, date] = getRegularDay(new Date())
+export const getFiveRegularDays = async (today: Date): Promise<Date[]> => {
+  const fiveDays: Date[] = [] as Date[]
+  let day = new Date(today)
+  for (let i = 0; i < 5; i++) {
+    const [f, D] = getRegularDay(day)
+    fiveDays.push(D)
+    day = new Date(D.getTime() - 24 * 60 * 60 * 1000)
+  }
+  return fiveDays
+}
+/**
+ *
+ */
+export async function getOpenCloseTime(today?: Date) {
+  const [dayBacked, date] = getRegularDay(today ? new Date(today) : new Date())
   /**
   for (let i = 0; i < 7; i++) {
     const year = date.toLocaleString('en-US', { timeZone: 'America/New_York', year: 'numeric' })
@@ -145,6 +158,9 @@ export async function getOpenCloseTime() {
     if (dayBacked === false) {
       openTime = new Date(openTime.getTime() - 24 * 60 * 60 * 1000)
       closeTime = new Date(closeTime.getTime() - 24 * 60 * 60 * 1000)
+      // regular day if it is a day before holiday
+      // const [daybacked, date] = getRegularDay(openTime)
+      console.log('open/close 0 time', date)
     }
     console.log('open/close 1 time', openTime, closeTime)
   } else if (tod >= 20 * 60 * 60) {
@@ -188,7 +204,7 @@ export async function getOpenCloseTime() {
 const queryOptions: ChartOptionsWithReturnArray = {
   period1: new Date(),
   period2: new Date(),
-  interval: '5m',
+  interval: '1m',
 }
 const yfProps: YFProps = { symbol: 'SOXL', options: queryOptions }
 
@@ -204,7 +220,7 @@ export async function updateButton(O: YFProps) {
     const R = await yahooFinance.search(O.symbol)
     const Q = await yahooFinance.quote(O.symbol)
     const results = await yahooFinance.chart(O.symbol, O.options)
-    console.log('actions', results)
+    // console.log('actions', results)
     return results
   } catch (error) {
     console.error('Error fetching historical data:', error)

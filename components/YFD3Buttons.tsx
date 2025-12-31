@@ -1,7 +1,7 @@
 import * as d3 from 'd3'
 import React, { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { getOpenCloseTime, updateButton } from '@/lib/actions'
+import { getOpenCloseTime, getFiveRegularDays, updateButton } from '@/lib/actions'
 import { YFProps } from '@/components/YahooFinance'
 import { CandlestickChartProps } from '@/components/ApexCharts'
 import {
@@ -14,58 +14,145 @@ import emitter from '@/components/Emitter'
 /**
  *
  */
-async function handleButton1D(name, callback) {
-  console.log('button1D clicked')
-  const today = new Date()
-  const [estTime1, estTime2] = await getOpenCloseTime()
-  const queryOptions: ChartOptionsWithReturnArray = {
-    period1: estTime1,
-    period2: estTime2,
-    interval: '5m',
-  }
-  const O: YFProps = { symbol: name, options: queryOptions }
-  const results = await updateButton(O)
-  console.log('YFD3Buttons actions replied results', results)
-  if (results !== null) {
-    const R: CandlestickChartProps = { title: name, D: results }
-    callback(R)
-  }
+export interface ButtonClickedProps {
+  id: string
+  result: CandlestickChartProps
 }
-async function handleButton5D(name, callback) {
-  console.log('button5D clicked')
-  const interval = 30 * 60 * 1000
-  const [tmp, estTime2] = await getOpenCloseTime()
-  const estTime1 = new Date(tmp.getTime() - 4 * 24 * 60 * 60 * 1000)
-  const queryOptions: ChartOptionsWithReturnArray = {
-    period1: estTime1,
-    period2: estTime2,
-    interval: '30m',
-  }
-  const O: YFProps = { symbol: name, options: queryOptions }
-  const results: ChartResultArray = (await updateButton(O)) as ChartResultArray
-  if (results !== null) {
-    const Quotes: ChartResultArrayQuote[] = [] as ChartResultArrayQuote[]
-    let preDate: Date = new Date()
-    for (let i = 0; i < results.quotes.length; i++) {
-      const Q = results.quotes[i]
-      if (i == 0) {
-        preDate = Q.date
-      }
-      if (Q.volume !== 0) {
-        Quotes.push(Q)
-      }
-    }
-    console.log('button5D imputioned data', Quotes)
-    results.quotes = Quotes
-    const R: CandlestickChartProps = { title: name, D: results }
-    callback(R)
+/**
+ *
+ */
+const startSpinner = () => {
+  const spinner = d3.selectAll('main').select('#loadingSpinner')
+  if (spinner) {
+    spinner.attr('class', 'absolute left-1/2 top-1/2')
   }
 }
 /**
  *
  */
-async function handleButton1M(name, callback) {
+const stopSpinner = () => {
+  const spinner = d3.selectAll('main').select('#loadingSpinner')
+  if (spinner) {
+    spinner.attr('class', 'absolute left-1/2 top-1/2 hidden')
+  }
+}
+/**
+ *
+ */
+const showInterDiff = (open, close, text) => {
+  console.log('showInterDiff', open, close, text)
+  const D1 = d3.selectAll('main').select('#quoteCompare').select('#IntraDay')
+  if (D1) {
+    D1.html(text)
+  }
+  const D2 = d3.selectAll('main').select('#quoteCompare').select('#preClose')
+  if (D2) {
+    D2.html(open.toFixed(2))
+  }
+  const D3 = d3.selectAll('main').select('#quoteCompare').select('#quote')
+  if (D3) {
+    D3.html(close.toFixed(2))
+  }
+  const D4 = d3.selectAll('main').select('#quoteCompare').select('#diff')
+  if (D4) {
+    const d = close - open
+    const p = Math.round((d / open) * 100) / 100
+    if (d > 0) {
+      D4.attr('class', 'text-center text-xs text-green-700 md:text-base')
+      const s = '+' + d.toFixed(2) + '/' + p.toFixed(2) + '%'
+      D4.html(s)
+    } else {
+      D4.attr('class', 'text-center text-xs text-red-700 md:text-base')
+      const s = d.toFixed(2) + '/' + p.toFixed(2) + '%'
+      D4.html(s)
+    }
+  }
+}
+/**
+ *
+ */
+async function handleButton1D(indicatorId, name, callback) {
+  console.log('button1D clicked')
+  startSpinner()
+  const today = new Date()
+  const [estTime1, estTime2] = await getOpenCloseTime()
+  const queryOptions: ChartOptionsWithReturnArray = {
+    period1: estTime1,
+    period2: estTime2,
+    interval: '1m',
+  }
+  const Quotes: ChartResultArrayQuote[] = [] as ChartResultArrayQuote[]
+  const O: YFProps = { symbol: name, options: queryOptions }
+  const results = await updateButton(O)
+  // console.log('YFD3Buttons actions replied results', results)
+  if (results !== null) {
+    for (let j = 0; j < results.quotes.length; j++) {
+      if (results.quotes[j].volume !== 0) Quotes.push(results.quotes[j])
+    }
+    const O = Quotes[0].open
+    const C = Quotes[Quotes.length - 1].close
+    showInterDiff(O, C, 'InterDay')
+    results.quotes = Quotes
+    const R: CandlestickChartProps = { title: name, D: results }
+    const B: ButtonClickedProps = { id: indicatorId, result: R }
+    callback(B)
+  }
+  stopSpinner()
+}
+/**
+ *
+ */
+async function handleButton5D(indicatorId, name, callback) {
+  console.log('button5D clicked')
+  startSpinner()
+  const interval = 30 * 60 * 1000
+  const [tmp, estTime2] = await getOpenCloseTime()
+  // const estTime1 = new Date(tmp.getTime() - 4 * 24 * 60 * 60 * 1000)
+  const fiveDays = await getFiveRegularDays(tmp)
+  console.log('5D, fiveDays', fiveDays)
+  const Quotes: ChartResultArrayQuote[] = [] as ChartResultArrayQuote[]
+  for (let i = 4; i >= 0; i--) {
+    const d = fiveDays[i]
+    const [t1, t2] = await getOpenCloseTime(d)
+    const queryOptions: ChartOptionsWithReturnArray = {
+      period1: t1,
+      period2: t2,
+      interval: '15m',
+    }
+    const O: YFProps = { symbol: name, options: queryOptions }
+    const results: ChartResultArray = (await updateButton(O)) as ChartResultArray
+    if (results !== null) {
+      for (let j = 0; j < results.quotes.length; j++) {
+        if (results.quotes[j].volume !== 0) Quotes.push(results.quotes[j])
+      }
+    }
+    if (i == 0) {
+      const startDate = fiveDays[4]
+      const dt = Math.trunc((5 * 24 * 60) / Quotes.length)
+      console.log('5D', startDate, Quotes.length, dt)
+      for (let i = 0; i < Quotes.length; i++) {
+        Quotes[i].date = new Date(startDate.getTime() - 13 * 60 * 60 * 1000 + i * dt * 60 * 1000)
+        // console.log('5D quotes', Quotes[i].date, Quotes[i].close)
+      }
+      if (results !== null) {
+        const O = Quotes[0].open
+        const C = Quotes[Quotes.length - 1].close
+        showInterDiff(O, C, 'In 5D')
+        results.quotes = Quotes
+        const R: CandlestickChartProps = { title: name, D: results }
+        const B: ButtonClickedProps = { id: indicatorId, result: R }
+        callback(B)
+      }
+    }
+  }
+  stopSpinner()
+}
+/**
+ *
+ */
+async function handleButton1M(indicatorId, name, callback) {
   console.log('button1M clicked')
+  startSpinner()
   const [tmp, estTime2] = await getOpenCloseTime()
   const estTime1 = new Date(tmp.getTime() - 30 * 24 * 60 * 60 * 1000)
   const queryOptions: ChartOptionsWithReturnArray = {
@@ -78,14 +165,17 @@ async function handleButton1M(name, callback) {
   console.log('YFD3Buttons actions replied results', results)
   if (results !== null) {
     const R: CandlestickChartProps = { title: name, D: results }
-    callback(R)
+    const B: ButtonClickedProps = { id: indicatorId, result: R }
+    callback(B)
   }
+  stopSpinner()
 }
 /**
  *
  */
-async function handleButton6M(name, callback) {
+async function handleButton6M(indicatorId, name, callback) {
   console.log('button6M clicked')
+  startSpinner()
   const [tmp, estTime2] = await getOpenCloseTime()
   const estTime1 = new Date(tmp.getTime() - 180 * 24 * 60 * 60 * 1000)
   const queryOptions: ChartOptionsWithReturnArray = {
@@ -98,14 +188,17 @@ async function handleButton6M(name, callback) {
   console.log('YFD3Buttons actions replied results', results)
   if (results !== null) {
     const R: CandlestickChartProps = { title: name, D: results }
-    callback(R)
+    const B: ButtonClickedProps = { id: indicatorId, result: R }
+    callback(B)
   }
+  stopSpinner()
 }
 /**
  *
  */
-async function handleButtonYTD(name, callback) {
+async function handleButtonYTD(indicatorId, name, callback) {
   console.log('buttonYTD clicked')
+  startSpinner()
   const year = new Date().getFullYear()
   const [tmp, estTime2] = await getOpenCloseTime()
   const estTime1 = new Date(year + '-01-01')
@@ -119,14 +212,17 @@ async function handleButtonYTD(name, callback) {
   console.log('YFD3Buttons actions replied results', results)
   if (results !== null) {
     const R: CandlestickChartProps = { title: name, D: results }
-    callback(R)
+    const B: ButtonClickedProps = { id: indicatorId, result: R }
+    callback(B)
   }
+  stopSpinner()
 }
 /**
  *
  */
-async function handleButton1Y(name, callback) {
+async function handleButton1Y(indicatorId, name, callback) {
   console.log('button1Y clicked')
+  startSpinner()
   const [tmp, estTime2] = await getOpenCloseTime()
   const estTime1 = new Date(tmp.getTime() - 365 * 24 * 60 * 60 * 1000)
   const queryOptions: ChartOptionsWithReturnArray = {
@@ -139,14 +235,17 @@ async function handleButton1Y(name, callback) {
   console.log('YFD3Buttons actions replied results', results)
   if (results !== null) {
     const R: CandlestickChartProps = { title: name, D: results }
-    callback(R)
+    const B: ButtonClickedProps = { id: indicatorId, result: R }
+    callback(B)
   }
+  stopSpinner()
 }
 /**
  *
  */
-async function handleButton5Y(name, callback) {
+async function handleButton5Y(indicatorId, name, callback) {
   console.log('button5Y clicked')
+  startSpinner()
   const [tmp, estTime2] = await getOpenCloseTime()
   const estTime1 = new Date(tmp.getTime() - 5 * 365 * (24 + 5) * 60 * 60 * 1000)
   const queryOptions: ChartOptionsWithReturnArray = {
@@ -159,9 +258,43 @@ async function handleButton5Y(name, callback) {
   console.log('YFD3Buttons actions replied results', results)
   if (results !== null) {
     const R: CandlestickChartProps = { title: name, D: results }
-    callback(R)
+    const B: ButtonClickedProps = { id: indicatorId, result: R }
+    callback(B)
+  }
+  stopSpinner()
+}
+/**
+ *
+ */
+async function handleIndicatorButton(indicatorId, buttonId, name, callback) {
+  console.log('buttonVOL clicked')
+  switch (buttonId) {
+    case 'button-1D':
+      return handleButton1D(indicatorId, name, callback)
+      break
+    case 'button-5D':
+      return handleButton5D(indicatorId, name, callback)
+      break
+    case 'button-1M':
+      return handleButton1M(indicatorId, name, callback)
+      break
+    case 'button-6M':
+      return handleButton6M(indicatorId, name, callback)
+      break
+    case 'button-1Y':
+      return handleButton1Y(indicatorId, name, callback)
+      break
+    case 'button-5Y':
+      return handleButton5Y(indicatorId, name, callback)
+      break
+    case 'button-YTD':
+      return handleButton5D(indicatorId, name, callback)
+      break
+    default:
+      break
   }
 }
+
 const StockHolidays = [
   { date: new Date('2025-12-25'), description: `Christmas Day` },
   { date: new Date('2026-01-01'), description: `new Year's Day` },
@@ -205,7 +338,8 @@ const isStockHoliday = (today): [boolean, string] => {
 /**
  *
  */
-const showCoreData = (name, callback) => {
+/**
+const showCoreData = (indicatorId, name, callback) => {
   console.log('showCoreData, name', name)
   const coredata = d3.select('#yahooFinance').select('#CoreData')
   const today = new Date()
@@ -227,43 +361,6 @@ const showCoreData = (name, callback) => {
   }
   const easternDay = new Date().toLocaleDateString('en-US', options)
   console.log('easternDay', easternDay)
-  /**
-  const numericDay =
-    new Date().toLocaleString('en-US', {
-      timeZone: 'America/New_York',
-      weekday: 'narrow',
-    }).length === 1
-      ? new Date().toLocaleString('en-US', {
-          timeZone: 'America/New_York',
-          weekday: 'narrow',
-        })
-      : new Date().toLocaleString('en-US', {
-            timeZone: 'America/New_York',
-            weekday: 'short',
-          }).length === 3
-        ? [6, 0, 1, 2, 3, 4, 5][
-            new Date().toLocaleString('en-US', {
-              timeZone: 'America/New_York',
-              weekday: 'short',
-            })[0]
-          ]
-        : new Date().getDay()
-  console.log('numericDay', numericDay)
-  const easternDayNumber =
-    new Date(dateString).toLocaleString('en-US', {
-      timeZone: 'America/New_York',
-      weekday: 'short',
-    }) === 'Fri'
-      ? 5
-      : new Date(dateString).getDay()
-  console.log('easternDayNumber', easternDayNumber)
-  const easternDayNum = (function () {
-    const d = new Date(dateString)
-    d.setUTCHours(d.getUTCHours() + 4)
-    return d.getDay()
-  })()
-  console.log('easternDayNum', easternDayNum)
-  */
   usToday = ': ' + easternDay + ', ' + usToday + ', est.'
   if (easternDay === 'Sunday') {
     coredata.html(`<span>US Market is closed on Sunday<span>. <span>US Now ${usToday}</span>`)
@@ -289,7 +386,7 @@ const showCoreData = (name, callback) => {
     coredata.html(
       `<span>US Market will open ${h} hours ${m} minutes later.</span><span>US Now ${usToday}</span>`
     )
-    if (now > preMarketTime) handleButton1D(name, callback)
+    if (now > preMarketTime) handleButton1D(indicatorId, name, callback)
   } else if (now >= openTime && now < closeTime) {
     const d = closeTime - now
     const h = Math.floor(d / 3600)
@@ -297,23 +394,26 @@ const showCoreData = (name, callback) => {
     coredata.html(
       `<span>US Market will close ${h} hours ${m} minutes later.</span><span>US Now ${usToday}</span>`
     )
-    handleButton1D(name, callback)
+    handleButton1D(indicatorId, name, callback)
   } else {
     coredata.html(`<span>US Market is closed.</span><span>US Now ${usToday}</span>`)
   }
 }
-
+*/
 /**
  *
  */
 interface YFD3ButtonsProps {
-  onButtonClicked: (O: CandlestickChartProps) => void
+  onButtonClicked: (B: ButtonClickedProps) => void
 }
 /**
  *
  */
 const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
   const [buttonClicked, setButtonClicked] = useState('button-1D')
+  const [indicatorClicked, setIndicatorClicked] = useState('button-VOL')
+  const timeoutRef = useRef<number>(Date.now())
+  const coreDataRef = useRef<number>(0)
   const nameRef = useRef<string>('SOXL')
   const router = useRouter()
   const buttons = d3.selectAll('main').selectAll('button')
@@ -328,7 +428,7 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
       case 'button-1D':
         d3.select(nodes[i]).on('click', function (event, d) {
           nameRef.current = d3.select(this).attr('data-name')
-          handleButton1D(nameRef.current, onButtonClicked)
+          handleButton1D(indicatorClicked, nameRef.current, onButtonClicked)
           d3.select(this).attr('class', clsH)
           setButtonClicked('button-1D')
           router.refresh()
@@ -343,7 +443,7 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
       case 'button-5D':
         d3.select(nodes[i]).on('click', function (event, d) {
           nameRef.current = d3.select(this).attr('data-name')
-          handleButton5D(nameRef.current, onButtonClicked)
+          handleButton5D(indicatorClicked, nameRef.current, onButtonClicked)
           d3.select(this).attr('class', clsH)
           setButtonClicked('button-5D')
           router.refresh()
@@ -357,7 +457,7 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
       case 'button-1M':
         d3.select(nodes[i]).on('click', function (event, d) {
           nameRef.current = d3.select(this).attr('data-name')
-          handleButton1M(nameRef.current, onButtonClicked)
+          handleButton1M(indicatorClicked, nameRef.current, onButtonClicked)
           d3.select(this).attr('class', clsH)
           setButtonClicked('button-1M')
           router.refresh()
@@ -371,7 +471,7 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
       case 'button-6M':
         d3.select(nodes[i]).on('click', function (event, d) {
           nameRef.current = d3.select(this).attr('data-name')
-          handleButton6M(nameRef.current, onButtonClicked)
+          handleButton6M(indicatorClicked, nameRef.current, onButtonClicked)
           d3.select(this).attr('class', clsH)
           setButtonClicked('button-6M')
           router.refresh()
@@ -385,7 +485,7 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
       case 'button-YTD':
         d3.select(nodes[i]).on('click', function (event, d) {
           nameRef.current = d3.select(this).attr('data-name')
-          handleButtonYTD(nameRef.current, onButtonClicked)
+          handleButtonYTD(indicatorClicked, nameRef.current, onButtonClicked)
           d3.select(this).attr('class', clsH)
           setButtonClicked('button-YTD')
           router.refresh()
@@ -399,7 +499,7 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
       case 'button-1Y':
         d3.select(nodes[i]).on('click', function (event, d) {
           nameRef.current = d3.select(this).attr('data-name')
-          handleButton1Y(nameRef.current, onButtonClicked)
+          handleButton1Y(indicatorClicked, nameRef.current, onButtonClicked)
           d3.select(this).attr('class', clsH)
           setButtonClicked('button-1Y')
           router.refresh()
@@ -413,12 +513,82 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
       case 'button-5Y':
         d3.select(nodes[i]).on('click', function (event, d) {
           nameRef.current = d3.select(this).attr('data-name')
-          handleButton5Y(nameRef.current, onButtonClicked)
+          handleButton5Y(indicatorClicked, nameRef.current, onButtonClicked)
           d3.select(this).attr('class', clsH)
           setButtonClicked('button-5Y')
           router.refresh()
         })
         if (buttonClicked === 'button-5Y') {
+          d3.select(nodes[i]).attr('class', clsH)
+        } else {
+          d3.select(nodes[i]).attr('class', cls)
+        }
+        break
+      case 'button-VOL':
+        d3.select(nodes[i]).on('click', function (event, d) {
+          nameRef.current = d3.select(this).attr('data-name')
+          handleIndicatorButton('button-VOL', buttonClicked, nameRef.current, onButtonClicked)
+          d3.select(this).attr('class', clsH)
+          setIndicatorClicked('button-VOL')
+          router.refresh()
+        })
+        if (indicatorClicked === 'button-VOL') {
+          d3.select(nodes[i]).attr('class', clsH)
+        } else {
+          d3.select(nodes[i]).attr('class', cls)
+        }
+        break
+      case 'button-RSI':
+        d3.select(nodes[i]).on('click', function (event, d) {
+          nameRef.current = d3.select(this).attr('data-name')
+          handleIndicatorButton('button-RSI', buttonClicked, nameRef.current, onButtonClicked)
+          d3.select(this).attr('class', clsH)
+          setIndicatorClicked('button-RSI')
+          router.refresh()
+        })
+        if (indicatorClicked === 'button-RSI') {
+          d3.select(nodes[i]).attr('class', clsH)
+        } else {
+          d3.select(nodes[i]).attr('class', cls)
+        }
+        break
+      case 'button-ATR':
+        d3.select(nodes[i]).on('click', function (event, d) {
+          nameRef.current = d3.select(this).attr('data-name')
+          handleIndicatorButton('button-ATR', buttonClicked, nameRef.current, onButtonClicked)
+          d3.select(this).attr('class', clsH)
+          setIndicatorClicked('button-ATR')
+          router.refresh()
+        })
+        if (indicatorClicked === 'button-ATR') {
+          d3.select(nodes[i]).attr('class', clsH)
+        } else {
+          d3.select(nodes[i]).attr('class', cls)
+        }
+        break
+      case 'button-MFI':
+        d3.select(nodes[i]).on('click', function (event, d) {
+          nameRef.current = d3.select(this).attr('data-name')
+          handleIndicatorButton('button-MFI', buttonClicked, nameRef.current, onButtonClicked)
+          d3.select(this).attr('class', clsH)
+          setIndicatorClicked('button-MFI')
+          router.refresh()
+        })
+        if (indicatorClicked === 'button-MFI') {
+          d3.select(nodes[i]).attr('class', clsH)
+        } else {
+          d3.select(nodes[i]).attr('class', cls)
+        }
+        break
+      case 'button-MACD':
+        d3.select(nodes[i]).on('click', function (event, d) {
+          nameRef.current = d3.select(this).attr('data-name')
+          handleIndicatorButton('button-MACD', buttonClicked, nameRef.current, onButtonClicked)
+          d3.select(this).attr('class', clsH)
+          setIndicatorClicked('button-MACD')
+          router.refresh()
+        })
+        if (indicatorClicked === 'button-MACD') {
           d3.select(nodes[i]).attr('class', clsH)
         } else {
           d3.select(nodes[i]).attr('class', cls)
@@ -430,6 +600,80 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
   }
   useEffect(() => {
     console.log('YFD3Button b4 emitter.on')
+    /**
+     *
+     */
+    const showCoreData = (indicatorId, name, callback) => {
+      console.log('showCoreData, name', name)
+      const coredata = d3.select('#yahooFinance').select('#CoreData')
+      const today = new Date()
+      const year = today.toLocaleString('en-US', { timeZone: 'America/New_York', year: 'numeric' })
+      const month = today.toLocaleString('en-US', {
+        timeZone: 'America/New_York',
+        month: '2-digit',
+      })
+      const day = today.toLocaleString('en-US', { timeZone: 'America/New_York', day: '2-digit' })
+      const hour = today.toLocaleString('en-US', {
+        timeZone: 'America/New_York',
+        hour: 'numeric',
+        hourCycle: 'h23',
+      })
+      const minute = today.toLocaleString('en-US', {
+        timeZone: 'America/New_York',
+        minute: '2-digit',
+      })
+      const second = today.toLocaleString('en-US', {
+        timeZone: 'America/New_York',
+        second: '2-digit',
+      })
+      let usToday = today.toLocaleString('en-US', { timeZone: 'America/New_York' })
+      const dynamicWeekdayValue = 'long'
+      const options = {
+        timeZone: 'America/New_York',
+        weekday: dynamicWeekdayValue as 'long' | 'short' | 'narrow',
+      }
+      const easternDay = new Date().toLocaleDateString('en-US', options)
+      console.log('easternDay', easternDay)
+      usToday = ': ' + easternDay + ', ' + usToday + ', est.'
+      const spanTag = `<span className="opacity-0 md:opacity-100">US Now ${usToday}</span>`
+      if (easternDay === 'Sunday') {
+        coredata.html(`<span>US Market is closed on Sunday<span>. ${spanTag}`)
+        return
+      }
+      if (easternDay === 'Saturday') {
+        coredata.html(`<span>US Market is closed on Saturady.</span> ${spanTag}`)
+        return
+      }
+      const [r, v] = isStockHoliday(today)
+      if (r) {
+        coredata.html(`<span>US Market is closed on ${v}.</span> ${spanTag}`)
+        return
+      }
+      const now = Number(hour) * 60 * 60 + Number(minute) * 60 + Number(second)
+      const preMarketTime = 4 * 60 * 60
+      const openTime = 9 * 60 * 60 + 30 * 60 + 0
+      const closeTime = 16 * 60 * 60 + 0 * 60 + 0
+      if (now < openTime) {
+        const d = openTime - now
+        const h = Math.floor(d / 3600)
+        const m = Math.floor((d - h * 3600) / 60)
+        coredata.html(
+          `<span>US Market will open in ${h} hours ${m} minutes later.</span>${spanTag}`
+        )
+        if (now > preMarketTime && buttonClicked === 'button-1D')
+          handleButton1D(indicatorId, name, callback)
+      } else if (now >= openTime && now < closeTime) {
+        const d = closeTime - now
+        const h = Math.floor(d / 3600)
+        const m = Math.floor((d - h * 3600) / 60)
+        coredata.html(
+          `<span>US Market will close in ${h} hours ${m} minutes later.</span> ${spanTag}`
+        )
+        if (buttonClicked === 'button-1D') handleButton1D(indicatorId, name, callback)
+      } else {
+        coredata.html(`<span>US Market is closed.</span>${spanTag}`)
+      }
+    }
     emitter.on('searchTicker', (data) => {
       console.log('Event "searchTicker" emitted with data:', data)
       nameRef.current = data.ticker[0]
@@ -461,12 +705,18 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
             break
         }
       }
-      handleButton1D(data.ticker[0], onButtonClicked)
+      handleButton1D(indicatorClicked, data.ticker[0], onButtonClicked)
     })
-    showCoreData(nameRef.current, onButtonClicked)
+    if (Date.now() - coreDataRef.current > 2 * 1000) {
+      showCoreData(indicatorClicked, nameRef.current, onButtonClicked)
+      coreDataRef.current = Date.now()
+    }
     const oneMTimeout = setInterval(() => {
-      console.log('timeout')
-      showCoreData(nameRef.current, onButtonClicked)
+      console.log('TimeOut')
+      if (Date.now() - timeoutRef.current > 59 * 1000) {
+        showCoreData(indicatorClicked, nameRef.current, onButtonClicked)
+        timeoutRef.current = Date.now()
+      }
     }, 60 * 1000)
   }, [nameRef, nodes, onButtonClicked]) // The empty depen
   return <></>

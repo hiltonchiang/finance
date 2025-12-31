@@ -7,7 +7,20 @@ import emitter from '@/components/Emitter'
 import React, { useState, useEffect } from 'react'
 import useWindowDimensions from '@/components/WindowDimension'
 import { ChartResultArray } from 'yahoo-finance2/esm/src/modules/chart.js'
-
+import { ButtonClickedProps } from '@/components/YFD3Buttons'
+import Spinner from '@/components/Spinner'
+import {
+  RSIConfig,
+  rsi,
+  ATRConfig,
+  ATRResult,
+  atr,
+  MFIConfig,
+  mfi,
+  MACDConfig,
+  MACDResult,
+  macd,
+} from 'indicatorts'
 const ReactApexChart = dynamic(() => import('react-apexcharts'), {
   ssr: false,
 })
@@ -15,48 +28,31 @@ const YFD3Buttons = dynamic(() => import('@/components/YFD3Buttons'), {
   ssr: false,
 })
 // Define the type for a single data point (OHLC: Open, High, Low, Close)
-interface CandlestickDataPoint {
-  x: Date
-  y: [number | null, number | null, number | null, number | null]
-}
-interface LineDataPoint {
-  x: Date
-  y: number | null
-}
-interface LineVolumePoint {
+interface LineTotalPoint {
   x: Date
   y: number | null
   v: number | null
+  rsi: number | null
+  atr: number | null
+  mfi: number | null
+  macd: number | null
 }
 // Define the type for the series data array
-interface CandlestickSeries {
-  name: string
-  data: CandlestickDataPoint[]
-}
-interface LineSeries {
-  name: string
-  data: LineDataPoint[]
-}
-interface LineVolumeSeries {
-  name: string
-  data: LineVolumePoint[]
-}
 export interface CandlestickChartProps {
   title: string
   D: ChartResultArray
 }
-
-const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
-  const { height, width } = useWindowDimensions()
-  const breakpoint = 768 // Example breakpoint for mobile/desktop
-  const isMobile = width && width <= breakpoint ? true : false
-  const [buttonClicked, setButtonClicked] = useState(false)
-  const { theme, setTheme, resolvedTheme } = useTheme()
-  console.log('ApexChart', title, 'data', D)
-  const quotesData: CandlestickDataPoint[] = [] as CandlestickDataPoint[]
-  const lineData: LineDataPoint[] = [] as LineDataPoint[]
-  const lineVolumeData: LineVolumePoint[] = [] as LineVolumePoint[]
-  console.log('CandlestickChart theme', resolvedTheme)
+/**
+ *
+ */
+const getTotalData = (D: ChartResultArray): LineTotalPoint[] => {
+  const lineTotalData: LineTotalPoint[] = [] as LineTotalPoint[]
+  const xA: Date[] = [] as Date[]
+  const openA: number[] = [] as number[]
+  const closeA: number[] = [] as number[]
+  const highA: number[] = [] as number[]
+  const lowA: number[] = [] as number[]
+  const volumeA: number[] = [] as number[]
   for (let i = 0; i < D.quotes.length; i++) {
     const Q = D.quotes[i]
     const X = new Date(Q.date.getTime() - 13 * 60 * 60 * 1000) // US ET
@@ -65,89 +61,176 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
     const low = Q && Q.low ? Math.round(Q.low * 100) / 100 : null
     const close = Q && Q.close ? Math.round(Q.close * 100) / 100 : null
     const volume = Q && Q.volume ? Math.round(Q.volume * 100) / 100 : null
-    quotesData.push({ x: X, y: [open, high, low, close] })
-    lineData.push({ x: X, y: close })
-    lineVolumeData.push({ x: X, y: close, v: volume })
+    xA.push(X)
+    openA.push(open!)
+    closeA.push(close!)
+    highA.push(high!)
+    lowA.push(low!)
+    volumeA.push(volume!)
   }
-  const [series1] = useState<CandlestickSeries[]>([
-    {
-      name: 'Stock Price',
-      data: quotesData,
+  const rsiConf: RSIConfig = { period: 5 }
+  const rsiArray = rsi(closeA, rsiConf)
+  for (let i = 0; i < rsiConf.period! - 1; i++) {
+    rsiArray[i] = rsiArray[rsiConf.period! - 1]
+  }
+  const atrConf: ATRConfig = { period: 14 }
+  const atrResult: ATRResult = atr(highA, lowA, closeA, atrConf)
+  // console.log('atr', atrResult.trLine, atrResult.atrLine)
+  const mfiConf: MFIConfig = { period: 14 }
+  const mfiArray = mfi(highA, lowA, closeA, volumeA, mfiConf)
+  const macdConf: MACDConfig = { fast: 12, slow: 26, signal: 9 }
+  const macdResult: MACDResult = macd(closeA, macdConf)
+  for (let i = 0; i < D.quotes.length; i++) {
+    let rsi = lowA[i] + (highA[i] - lowA[i]) * (rsiArray[i] / 100) * 0.1
+    // rsi = Math.round(rsi * 100) / 100
+    rsi = Math.round(rsiArray[i] * 100) / 100
+    lineTotalData.push({
+      x: xA[i],
+      y: closeA[i],
+      v: volumeA[i],
+      rsi: rsi,
+      atr: atrResult.atrLine[i],
+      mfi: mfiArray[i],
+      macd: macdResult.macdLine[i],
+    })
+  }
+  return lineTotalData
+}
+/**
+ *
+ */
+const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
+  const { height, width } = useWindowDimensions()
+  const breakpoint = 768 // Example breakpoint for mobile/desktop
+  const isMobile = width && width <= breakpoint ? true : false
+  const [buttonClicked, setButtonClicked] = useState(false)
+  const { theme, setTheme, resolvedTheme } = useTheme()
+  const lineTotalData: LineTotalPoint[] = getTotalData(D)
+  /**
+   *
+   */
+  const yAxis1 = {
+    axisTicks: {
+      show: true,
     },
-  ])
-  const [series2] = useState<LineSeries[]>([
-    {
-      name: 'Stock Price',
-      data: lineData,
+    axisBorder: {
+      show: true,
+      color: '#008FFB',
     },
-  ])
-  const [options1] = useState<ApexOptions>({
-    chart: {
-      type: 'candlestick',
-      height: 600,
-      toolbar: {
-        show: true, // Enable toolbar for zoom/pan
+    labels: {
+      style: {
+        colors: '#008FFB',
+      },
+      formatter: function (val) {
+        if (val) {
+          return val.toFixed(2)
+        }
+        return ''
       },
     },
     title: {
-      text: title,
-      align: 'left',
-    },
-    xaxis: {
-      type: 'datetime', // Important: use 'datetime' type for date objects
-      labels: {
-        datetimeUTC: false, // Set to false to use local time zone
+      text: 'Price ($)',
+      style: {
+        color: '#008FFB',
       },
     },
-    yaxis: {
-      tooltip: {
-        enabled: true,
-      },
+    tooltip: {
+      enabled: true,
     },
-    plotOptions: {
-      candlestick: {
-        colors: {
-          upward: '#00B746', // Customize colors if desired
-          downward: '#EF403C',
-        },
-      },
+  }
+  /**
+   *
+   */
+  const yAxis2 = {
+    axisTicks: {
+      show: true,
     },
-  })
-  const [options2] = useState<ApexOptions>({
-    chart: {
-      type: 'line',
-      height: 600,
-      toolbar: {
-        show: true, // Enable toolbar for zoom/pan
+    axisBorder: {
+      show: true,
+      color: '#00E396',
+    },
+    labels: {
+      style: {
+        colors: '#00E396',
+      },
+      formatter: function (val) {
+        if (val) {
+          let v = val / 1000000
+          if (v < 0.001) v = val / 1000
+          return v.toFixed(2)
+        }
+        return ''
       },
     },
     title: {
-      text: title,
-      align: 'center',
-    },
-    xaxis: {
-      type: 'datetime', // Important: use 'datetime' type for date objects
-    },
-    yaxis: {
-      tooltip: {
-        enabled: true,
+      text: 'Volume (M)',
+      style: {
+        color: '#00E396',
       },
     },
-    plotOptions: {
-      candlestick: {
-        colors: {
-          upward: '#00B746', // Customize colors if desired
-          downward: '#EF403C',
-        },
+    opposite: true, // Place this Y-axis on the right side
+  }
+  /**
+   *
+   */
+  const yAxis3 = {
+    axisTicks: {
+      show: true,
+    },
+    axisBorder: {
+      show: true,
+      color: '#00E396',
+    },
+    labels: {
+      style: {
+        colors: '#00E396',
+      },
+      formatter: function (val) {
+        if (val) {
+          return val.toFixed(2)
+        }
+        return ''
       },
     },
-    stroke: {
-      curve: ['smooth', 'monotoneCubic'],
-      lineCap: 'round',
-      width: 3,
+    title: {
+      text: 'Indicator',
+      style: {
+        color: '#00E396',
+      },
     },
-  })
-  const [options3, setOptions3] = useState<ApexOptions>({
+    opposite: true, // Place this Y-axis on the right side
+  }
+  /**
+   *
+   */
+  const seriesLine = {
+    name: 'Stock Price',
+    type: 'line',
+    data: lineTotalData.map((item) => ({ x: item.x, y: item.y })),
+    color: '#008FFB',
+  }
+  /**
+   *
+   */
+  const seriesLine2 = {
+    name: 'Stock Price',
+    type: 'line',
+    data: lineTotalData.map((item) => ({ x: item.x, y: item.y })),
+    color: '#A2E635',
+  }
+  /**
+   *
+   */
+  const seriesColumn = {
+    name: 'Volume',
+    type: 'column',
+    data: lineTotalData.map((item) => ({ x: item.x, y: item.v })),
+    color: '#00E396',
+  }
+  /**
+   * setup ApexOptions
+   */
+  const [Options, setOptions] = useState<ApexOptions>({
     chart: {
       height: 'auto',
       type: 'line', // Default type, can be overridden in series
@@ -157,24 +240,10 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
     theme: {
       mode: resolvedTheme === 'dark' ? 'dark' : 'light',
     },
-    series: [
-      {
-        name: 'Stock Price',
-        type: 'line',
-        data: lineVolumeData.map((item) => ({ x: item.x, y: item.y })), // Map data for price line
-        color: '#008FFB',
-      },
-      {
-        name: 'Volume',
-        type: 'column',
-        data: lineVolumeData.map((item) => ({ x: item.x, y: item.v })), // Map data for volume columns
-        color: '#00E396',
-      },
-    ],
     stroke: {
       lineCap: 'round',
       curve: ['smooth', 'monotoneCubic'],
-      width: [2, 0], // Line width for price series, 0 for volume series
+      width: [2, 2, 2], // Line width for price series, 0 for volume series
     },
     title: {
       text: title,
@@ -190,60 +259,8 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
         datetimeUTC: false, // Set to false to use local time zone
       },
     },
-    yaxis: [
-      {
-        axisTicks: {
-          show: true,
-        },
-        axisBorder: {
-          show: true,
-          color: '#008FFB',
-        },
-        labels: {
-          style: {
-            colors: '#008FFB',
-          },
-        },
-        title: {
-          text: 'Price ($)',
-          style: {
-            color: '#008FFB',
-          },
-        },
-        tooltip: {
-          enabled: true,
-        },
-      },
-      {
-        axisTicks: {
-          show: true,
-        },
-        axisBorder: {
-          show: true,
-          color: '#00E396',
-        },
-        labels: {
-          style: {
-            colors: '#00E396',
-          },
-          formatter: function (val) {
-            if (val) {
-              let v = val / 1000000
-              if (v < 0.001) v = val / 1000
-              return v.toFixed(2)
-            }
-            return ''
-          },
-        },
-        title: {
-          text: 'Volume (M)',
-          style: {
-            color: '#00E396',
-          },
-        },
-        opposite: true, // Place this Y-axis on the right side
-      },
-    ],
+    series: [seriesLine, seriesColumn],
+    yaxis: [yAxis1, yAxis2],
     tooltip: {
       theme: resolvedTheme,
       fillSeriesColor: true,
@@ -335,62 +352,153 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
   /**
    *
    */
-  function handleButtonClicked(O: CandlestickChartProps) {
-    console.log('ApxCharters handleBuffonClicked')
+  function handleButtonClicked(B: ButtonClickedProps) {
+    console.log('ApxCharters handleButtonClicked', B.id)
     // CandlestickChart(O.title, O.D)
-    const lineVolumeData: LineVolumePoint[] = [] as LineVolumePoint[]
-    for (let i = 0; i < O.D.quotes.length; i++) {
-      const Q = O.D.quotes[i]
-      const X = new Date(Q.date.getTime() - 13 * 60 * 60 * 1000)
-      const close = Q && Q.close ? Math.round(Q.close * 100) / 100 : null
-      const volume = Q && Q.volume ? Math.round(Q.volume * 100) / 100 : null
-      lineVolumeData.push({ x: X, y: close, v: volume })
-    }
+    const O: CandlestickChartProps = B.result
+    const lineTotalData: LineTotalPoint[] = getTotalData(O.D)
     interface LVProps {
       x: Date
       y: number | null
     }
     const D1: LVProps[] = [] as LVProps[]
     const D2: LVProps[] = [] as LVProps[]
-    for (let i = 0; i < lineVolumeData.length; i++) {
-      const L = lineVolumeData[i]
+    const D3: LVProps[] = [] as LVProps[]
+    for (let i = 0; i < lineTotalData.length; i++) {
+      const L = lineTotalData[i]
       D1.push({ x: L.x, y: L.y })
       D2.push({ x: L.x, y: L.v })
     }
-    setOptions3({
-      ...options3, // Spread existing options to preserve other settings
-      series: [
-        {
-          name: 'Stock Price',
-          type: 'line',
-          data: D1,
-          color: '#008FFB',
-        },
-        {
-          name: 'Volume',
-          type: 'column',
-          data: D2,
-          color: '#00E396',
-        },
-      ],
-      title: {
-        ...options3.title, // Spread existing title options if any
-        text: O.title,
-      },
-      subtitle: {
-        ...options3.subtitle, // Spread existing subtitle options if any
-        text: O.D.meta.longName,
-      },
-    })
+    switch (B.id) {
+      case 'button-VOL':
+        for (let i = 0; i < lineTotalData.length; i++) {
+          const L = lineTotalData[i]
+          D2.push({ x: L.x, y: L.v })
+        }
+        seriesLine.data = D1
+        seriesColumn.data = D2
+        setOptions({
+          ...Options, // Spread existing options to preserve other settings
+          series: [seriesLine, seriesColumn],
+          yaxis: [yAxis1, yAxis2],
+          title: {
+            ...Options.title, // Spread existing title options if any
+            text: O.title,
+          },
+          subtitle: {
+            ...Options.subtitle, // Spread existing subtitle options if any
+            text: O.D.meta.longName,
+          },
+        })
+        break
+      case 'button-RSI':
+        for (let i = 0; i < lineTotalData.length; i++) {
+          const L = lineTotalData[i]
+          D3.push({ x: L.x, y: L.rsi })
+        }
+        yAxis3.title.text = 'RSI'
+        seriesLine.data = D1
+        seriesLine2.data = D3
+        seriesLine2.name = 'RSI'
+        seriesLine2.color = '#A2E635'
+        setOptions({
+          ...Options, // Spread existing options to preserve other settings
+          series: [seriesLine, seriesLine2],
+          yaxis: [yAxis1, yAxis3],
+          title: {
+            ...Options.title, // Spread existing title options if any
+            text: O.title,
+          },
+          subtitle: {
+            ...Options.subtitle, // Spread existing subtitle options if any
+            text: O.D.meta.longName,
+          },
+        })
+        break
+      case 'button-ATR':
+        for (let i = 0; i < lineTotalData.length; i++) {
+          const L = lineTotalData[i]
+          D3.push({ x: L.x, y: L.atr })
+        }
+        yAxis3.title.text = 'ATR'
+        seriesLine.data = D1
+        seriesLine2.data = D3
+        seriesLine2.name = 'ATR'
+        seriesLine2.color = '#FACC15'
+        setOptions({
+          ...Options, // Spread existing options to preserve other settings
+          series: [seriesLine, seriesLine2],
+          yaxis: [yAxis1, yAxis3],
+          title: {
+            ...Options.title, // Spread existing title options if any
+            text: O.title,
+          },
+          subtitle: {
+            ...Options.subtitle, // Spread existing subtitle options if any
+            text: O.D.meta.longName,
+          },
+        })
+        break
+      case 'button-MFI':
+        for (let i = 0; i < lineTotalData.length; i++) {
+          const L = lineTotalData[i]
+          D3.push({ x: L.x, y: L.mfi })
+        }
+        yAxis3.title.text = 'MFI'
+        seriesLine.data = D1
+        seriesLine2.data = D3
+        seriesLine2.name = 'MFI'
+        seriesLine2.color = '#E11D48'
+        setOptions({
+          ...Options, // Spread existing options to preserve other settings
+          series: [seriesLine, seriesLine2],
+          yaxis: [yAxis1, yAxis3],
+          title: {
+            ...Options.title, // Spread existing title options if any
+            text: O.title,
+          },
+          subtitle: {
+            ...Options.subtitle, // Spread existing subtitle options if any
+            text: O.D.meta.longName,
+          },
+        })
+        break
+      case 'button-MACD':
+        for (let i = 0; i < lineTotalData.length; i++) {
+          const L = lineTotalData[i]
+          D3.push({ x: L.x, y: L.macd })
+        }
+        yAxis3.title.text = 'MACD'
+        seriesLine.data = D1
+        seriesLine2.data = D3
+        seriesLine2.name = 'MACD'
+        seriesLine2.color = '#5EEAD4'
+        setOptions({
+          ...Options, // Spread existing options to preserve other settings
+          series: [seriesLine, seriesLine2],
+          yaxis: [yAxis1, yAxis3],
+          title: {
+            ...Options.title, // Spread existing title options if any
+            text: O.title,
+          },
+          subtitle: {
+            ...Options.subtitle, // Spread existing subtitle options if any
+            text: O.D.meta.longName,
+          },
+        })
+        break
+      default:
+        break
+    }
   }
   useEffect(() => {
-    // await emission of ThemeSwitch
+    //await emission of ThemeSwitch
     emitter.on('setTheme', (data) => {
       console.log('ApexCharts: Event "setTheme" ', data)
-      setOptions3({
-        ...options3, // Spread existing options to preserve other settings
+      setOptions({
+        ...Options, // Spread existing options to preserve other settings
         chart: {
-          ...options3,
+          ...Options,
           background: data.theme === 'light' ? '#F8F8F8' : '#121212',
         },
         theme: {
@@ -398,13 +506,26 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
         },
       })
     })
-  }, [])
+  }, [Options])
+  /**
+   *
+   */
+  function LoadingSpinner() {
+    return (
+      <div id="loadingSpinner" className="absolute left-1/2 top-1/2 hidden">
+        <Spinner size="lg" color="border-indigo-600" />
+      </div>
+    )
+  }
   /**
    *
    */
   return (
-    <div id="chart">
-      <ReactApexChart options={options3} series={options3.series} type="line" />
+    <div id="chart" className="relative">
+      <div className="relative">
+        <ReactApexChart options={Options} series={Options.series} type="line" />
+        <LoadingSpinner />
+      </div>
       <YFD3Buttons onButtonClicked={handleButtonClicked} />
     </div>
   )
