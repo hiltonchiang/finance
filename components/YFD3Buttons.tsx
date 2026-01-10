@@ -16,6 +16,8 @@ import {
   QuotesItems,
   IndicatorsItems,
   StrategiesItems,
+  menuItemClass,
+  menuItemClassHighlight,
 } from '@/components/FinanceConstants'
 /**
  *
@@ -27,7 +29,7 @@ export interface ButtonClickedProps {
 const TooltipCls =
   'max-w-[150px] md:max-w-[300px] bg-stone-900 -translate-x-6 translate-y-4 text-base text-stone-300 dark:text-lime-300 border-2 border-blue-500 p-4'
 const DialogtipCls =
-  'max-w-[150px] md:max-w-[500px] bg-stone-900 -translate-x-6 translate-y-4 text-base text-stone-300 dark:text-lime-300 border-2 border-blue-500 p-4'
+  'hidden md:block max-w-[150px] md:max-w-[500px] bg-stone-900 -translate-x-6 translate-y-4 text-base text-stone-300 dark:text-lime-300 border-2 border-blue-500 p-4'
 
 const tooltip = d3
   .select('body')
@@ -447,6 +449,9 @@ interface MenuProps {
 const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
   const [buttonClicked, setButtonClicked] = useState('button-1D')
   const [indicatorClicked, setIndicatorClicked] = useState('button-VOL')
+  const [quotesButton, setQuotesButton] = useState('1 D')
+  const [indicatorsButton, setIndicatorsButton] = useState('VOL')
+  const [strategiesButton, setStrategiesButton] = useState('RSI2')
   const timeoutRef = useRef<number>(Date.now())
   const coreDataRef = useRef<number>(0)
   const nameRef = useRef<string>('SOXL')
@@ -610,12 +615,23 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
                         const fullName = ids[l].fullName
                         const description = ids[l].description
                         if (fullName !== undefined) {
-                          console.log('fullName:', fullName)
-                          const pRect = this.parentNode.getBoundingClientRect()
-                          tooltip
-                            .style('left', pRect.left - 10 + 'px')
-                            .style('top', pRect.top - 100 + 'px')
-                          tooltip.html(fullName).style('opacity', 1)
+                          // console.log('fullName:', fullName)
+                          const vw = Math.max(
+                            document.documentElement.clientWidth || 0,
+                            window.innerWidth || 0
+                          )
+                          const vh = Math.max(
+                            document.documentElement.clientHeight || 0,
+                            window.innerHeight || 0
+                          )
+                          console.log('vw/vh', vw, vh)
+                          if (vw >= 500) {
+                            const pRect = this.parentNode.getBoundingClientRect()
+                            tooltip
+                              .style('left', pRect.left - 10 + 'px')
+                              .style('top', pRect.top - 100 + 'px')
+                            tooltip.html(fullName).style('opacity', 1)
+                          }
                         }
                         if (description !== undefined) {
                           dialogtip.style('right', '50px').style('top', '150px')
@@ -627,10 +643,22 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
                 }
               })
             })
+            // catch on mouseout event
             d3.select(N[j]).on('mouseout', function (event) {
               tooltip.style('opacity', 0)
               dialogtip.style('opacity', 0)
             })
+            // highlight selected item
+            const dispId = d3.select(N[j]).html()
+            if (
+              dispId === quotesButton ||
+              dispId === indicatorsButton ||
+              dispId === strategiesButton
+            ) {
+              d3.select(N[j]).attr('class', menuItemClassHighlight)
+            } else {
+              d3.select(N[j]).attr('class', menuItemClass)
+            }
           }
         })
         break

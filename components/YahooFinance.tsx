@@ -17,6 +17,11 @@ import {
   StrategiesItems,
   IndicatorsItems,
   QuotesItems,
+  menuItemsClsQuotes,
+  menuItemsClsIndicators,
+  menuItemsClsStrategies,
+  menuItemClass,
+  menuButtonCls,
 } from '@/components/FinanceConstants'
 
 export interface YFProps {
@@ -31,17 +36,6 @@ const YF = async ({ symbol, options }: YFProps) => {
    *
    */
   function QuotesDropDown() {
-    const itemClass = clsx(
-      `flex-shrink-0 snap-center rounded-md px-4 py-2`,
-      `font-bold text-center text-xs text-black`,
-      `w-[fit-content(100%)]`,
-      `bg-slate-50`,
-      `md:text-base md:bg-blue-500 md:text-white md:hover:bg-blue-700`
-    )
-    const menuButtonCls = clsx(
-      'set-ring-1 inset-ring-white/5 inline-flex w-full justify-center gap-x-1.5 rounded-md px-3 py-2',
-      'dark:bg-white/10 bg-stone-950 text-sm font-semibold text-white hover:bg-white/20'
-    )
     const Items = ['1 D', '5 D', '1 M', '6 M', 'YTD', '1 Y', '5 Y']
     return (
       <Menu as="div" className="inline-block">
@@ -49,29 +43,21 @@ const YF = async ({ symbol, options }: YFProps) => {
           Quotes
           <ChevronDownIcon aria-hidden="true" className="-mr-1 size-5 text-gray-400" />
         </MenuButton>
-        <MenuItems
-          transition
-          className={clsx(
-            'hidden data-[headlessui-state~=open]:block',
-            'data-closed:scale-95 data-closed:transform data-closed:opacity-0',
-            'data-enter:duration-100 data-enter:ease-out',
-            'data-leave:duration-75 data-leave:ease-in',
-            'absolute left-0 md:transform',
-            'z-10 mt-2 w-[fit-content(100%)] origin-top-right divide-y divide-white/10 rounded-md bg-blue-500 outline-1 -outline-offset-1 outline-white/10 transition'
-          )}
-          id="ItemsQuotes"
-          static
-        >
-          {QuotesItems.map((E) => (
-            <>
+        <MenuItems transition className={menuItemsClsQuotes} id="ItemsQuotes" static>
+          {QuotesItems.map((E, idx) => (
+            <div key={idx}>
               {E.items.map((item) => (
                 <MenuItem key={item.name}>
-                  <button data-name={symbol} data-fullname={item.fullName} className={itemClass}>
+                  <button
+                    data-name={symbol}
+                    data-fullname={item.fullName}
+                    className={menuItemClass}
+                  >
                     {item.name}
                   </button>
                 </MenuItem>
               ))}
-            </>
+            </div>
           ))}
         </MenuItems>
       </Menu>
@@ -109,35 +95,22 @@ const YF = async ({ symbol, options }: YFProps) => {
    *
    */
   function StrategiesDropDown() {
-    const itemClass = `flex-shrink-0 snap-center text-xs md:text-base rounded-md bg-slate-50 px-4 py-2 font-bold text-black w-[fit-content(100%)] md:bg-blue-500 md:text-white md:hover:bg-blue-700`
-    const menuButtonCls = clsx(
-      'set-ring-1 inset-ring-white/5 inline-flex w-full justify-center gap-x-1.5 rounded-md px-3 py-2',
-      'dark:bg-white/10 bg-stone-950 text-sm font-semibold text-white hover:bg-white/20'
-    )
     return (
       <Menu as="div" className="inline-block">
         <MenuButton className={menuButtonCls} id="MenuStrategies">
           Strategies
           <ChevronDownIcon aria-hidden="true" className="-mr-1 size-5 text-gray-400" />
         </MenuButton>
-        <MenuItems
-          transition
-          className={clsx(
-            'hidden data-[headlessui-state~=open]:block',
-            'data-closed:scale-95 data-closed:transform data-closed:opacity-0',
-            'data-enter:duration-100 data-enter:ease-out',
-            'data-leave:duration-75 data-leave:ease-in',
-            'absolute left-1/2 top-1/2 md:transform',
-            'z-10 mt-2 w-[fit-content(100%)] origin-top-right divide-y divide-white/10 rounded-md bg-blue-500 outline-1 -outline-offset-1 outline-white/10 transition'
-          )}
-          id="ItemsStrategies"
-          static
-        >
+        <MenuItems transition className={menuItemsClsStrategies} id="ItemsStrategies" static>
           {StrategiesItems.map((E) => (
             <>
               {E.items.map((item) => (
                 <MenuItem key={item.name}>
-                  <button data-name={symbol} data-fullname={item.fullName} className={itemClass}>
+                  <button
+                    data-name={symbol}
+                    data-fullname={item.fullName}
+                    className={menuItemClass}
+                  >
                     {item.name}
                   </button>
                 </MenuItem>
@@ -152,36 +125,22 @@ const YF = async ({ symbol, options }: YFProps) => {
    *
    */
   function IndicatorsDropDown() {
-    const itemClass = `flex-shrink-0 snap-center text-xs md:text-base rounded-md bg-slate-50 px-4 py-2 font-bold text-black w-[fit-content(100%)] md:bg-blue-500 md:text-white md:hover:bg-blue-700`
-    const menuButtonCls = clsx(
-      'set-ring-1 inset-ring-white/5 inline-flex w-full justify-center gap-x-1.5 rounded-md px-3 py-2',
-      'dark:bg-white/10 bg-stone-950 text-sm font-semibold text-white hover:bg-white/20'
-    )
     return (
       <Menu as="div" className="inline-block">
         <MenuButton className={menuButtonCls} id="MenuIndicators">
           Indicators
           <ChevronDownIcon aria-hidden="true" className="-mr-1 size-5 text-gray-400" />
         </MenuButton>
-        <MenuItems
-          transition
-          className={clsx(
-            'hidden data-[headlessui-state~=open]:block',
-            'data-closed:scale-95 data-closed:transform data-closed:opacity-0',
-            'data-enter:duration-100 data-enter:ease-out',
-            'data-leave:duration-75 data-leave:ease-in',
-            'absolute left-1/2 top-1/2 -translate-x-1/4 -translate-y-1/4',
-            'md:transform',
-            'z-10 mt-2 w-[fit-content(100%)] origin-top-right divide-y divide-white/10 rounded-md bg-blue-500 outline-1 -outline-offset-1 outline-white/10 transition'
-          )}
-          id="ItemsIndicators"
-          static
-        >
+        <MenuItems transition className={menuItemsClsIndicators} id="ItemsIndicators" static>
           {IndicatorsItems.map((E) => (
             <>
               {E.items.map((item) => (
                 <MenuItem key={item.name}>
-                  <button data-name={symbol} data-fullname={item.fullName} className={itemClass}>
+                  <button
+                    data-name={symbol}
+                    data-fullname={item.fullName}
+                    className={menuItemClass}
+                  >
                     {item.name}
                   </button>
                 </MenuItem>

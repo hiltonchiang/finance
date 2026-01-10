@@ -1,3 +1,4 @@
+import clsx from 'clsx'
 export interface ItemProps {
   name: string
   fullName?: string
@@ -320,3 +321,48 @@ export const QuotesItems: ItemsProps[] = [
     ],
   },
 ]
+
+export const menuButtonCls = clsx(
+  'set-ring-1 inset-ring-white/5 inline-flex w-full justify-center gap-x-1.5 rounded-md px-3 py-2',
+  'dark:bg-white/10 bg-stone-950 text-sm font-semibold text-white hover:bg-white/20'
+)
+export const menuItemsClsQuotes = clsx(
+  'hidden data-[headlessui-state~=open]:block',
+  'data-closed:scale-95 data-closed:transform data-closed:opacity-0',
+  'data-enter:duration-100 data-enter:ease-out',
+  'data-leave:duration-75 data-leave:ease-in',
+  'absolute left-0 md:transform',
+  'z-10 mt-2 w-[fit-content(100%)] origin-top-right divide-y divide-white/10 rounded-md bg-blue-500 outline-1 -outline-offset-1 outline-white/10 transition'
+)
+export const menuItemsClsIndicators = clsx(
+  'hidden data-[headlessui-state~=open]:block',
+  'data-closed:scale-95 data-closed:transform data-closed:opacity-0',
+  'data-enter:duration-100 data-enter:ease-out',
+  'data-leave:duration-75 data-leave:ease-in',
+  'absolute left-1/2 top-1/2 -translate-x-1/4 -translate-y-1/4 md:transform',
+  'z-10 mt-2 w-[fit-content(100%)] origin-top-right divide-y divide-white/10 rounded-md bg-blue-500 outline-1 -outline-offset-1 outline-white/10 transition'
+)
+export const menuItemsClsStrategies = clsx(
+  'hidden data-[headlessui-state~=open]:block',
+  'data-closed:scale-95 data-closed:transform data-closed:opacity-0',
+  'data-enter:duration-100 data-enter:ease-out',
+  'data-leave:duration-75 data-leave:ease-in',
+  'absolute left-1/2 top-1/2 md:transform',
+  'z-10 mt-2 w-[fit-content(100%)] origin-top-right divide-y divide-white/10 rounded-md bg-blue-500 outline-1 -outline-offset-1 outline-white/10 transition'
+)
+export const menuItemClass = clsx(
+  `flex-shrink-0 snap-center rounded-md px-4 py-2`,
+  `font-bold text-center text-xs text-black`,
+  `w-[fit-content(100%)]`,
+  `bg-blue-500`,
+  `md:text-base md:bg-blue-500 md:text-white md:hover:bg-blue-700`
+)
+
+export const menuItemClassHighlight = clsx(
+  `flex-shrink-0 snap-center rounded-md px-4 py-2`,
+  `font-bold text-center text-xs text-black`,
+  `border border-2 border-white p-2`,
+  `w-[fit-content(100%)]`,
+  `bg-blue-500`,
+  `md:text-base md:bg-blue-500 md:text-white md:hover:bg-blue-700`
+)
