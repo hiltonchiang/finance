@@ -6,7 +6,7 @@ export default async function Home() {
   console.log('yfprops', yfprops)
   return (
     <>
-      <div id="main-finance-page">
+      <div className="relative" id="main-finance-page">
         <YF symbol={yfprops.symbol} options={yfprops.options} />
       </div>
     </>

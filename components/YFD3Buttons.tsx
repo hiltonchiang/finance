@@ -1,16 +1,22 @@
 import * as d3 from 'd3'
-import React, { useState, useRef } from 'react'
+import emitter from '@/components/Emitter'
 import { useRouter } from 'next/navigation'
-import { getOpenCloseTime, getFiveRegularDays, updateButton } from '@/lib/actions'
 import { YFProps } from '@/components/YahooFinance'
+import React, { useEffect, useState, useRef } from 'react'
 import { CandlestickChartProps } from '@/components/ApexCharts'
+import { getOpenCloseTime, getFiveRegularDays, updateButton } from '@/lib/actions'
 import {
   ChartResultArray,
   ChartResultArrayQuote,
   ChartOptionsWithReturnArray,
 } from 'yahoo-finance2/esm/src/modules/chart.js'
-import { useEffect } from 'react'
-import emitter from '@/components/Emitter'
+import {
+  ItemProps,
+  ItemsProps,
+  QuotesItems,
+  IndicatorsItems,
+  StrategiesItems,
+} from '@/components/FinanceConstants'
 /**
  *
  */
@@ -18,6 +24,28 @@ export interface ButtonClickedProps {
   id: string
   result: CandlestickChartProps
 }
+const TooltipCls =
+  'max-w-[150px] md:max-w-[300px] bg-stone-900 -translate-x-6 translate-y-4 text-base text-stone-300 dark:text-lime-300 border-2 border-blue-500 p-4'
+const DialogtipCls =
+  'max-w-[150px] md:max-w-[500px] bg-stone-900 -translate-x-6 translate-y-4 text-base text-stone-300 dark:text-lime-300 border-2 border-blue-500 p-4'
+
+const tooltip = d3
+  .select('body')
+  .append('div')
+  .attr('id', 'finance-tooltip-body')
+  .attr('class', TooltipCls)
+  .style('opacity', 0)
+  .style('position', 'absolute')
+  .style('pointer-events', 'none')
+const dialogtip = d3
+  .select('body')
+  .append('div')
+  .attr('id', 'finance-description-body')
+  .attr('class', DialogtipCls)
+  .style('opacity', 0)
+  .style('position', 'fixed')
+  .style('pointer-events', 'none')
+
 /**
  *
  */
@@ -56,10 +84,11 @@ const showInterDiff = (open, close, text) => {
   const D4 = d3.selectAll('main').select('#quoteCompare').select('#diff')
   if (D4) {
     const d = close - open
-    const p = Math.round((d / open) * 100) / 100
+    const p = (d / open) * 100.0
+    console.log('p', p)
     if (d > 0) {
       D4.attr('class', 'text-center text-xs text-green-700 md:text-base')
-      const s = '+' + d.toFixed(2) + '/' + p.toFixed(2) + '%'
+      const s = '+' + d.toFixed(2) + '/+' + p.toFixed(2) + '%'
       D4.html(s)
     } else {
       D4.attr('class', 'text-center text-xs text-red-700 md:text-base')
@@ -84,10 +113,11 @@ async function handleButton1D(indicatorId, name, callback) {
   const Quotes: ChartResultArrayQuote[] = [] as ChartResultArrayQuote[]
   const O: YFProps = { symbol: name, options: queryOptions }
   const results = await updateButton(O)
-  // console.log('YFD3Buttons actions replied results', results)
+  console.log('YFD3Buttons actions replied results', results)
   if (results !== null) {
     for (let j = 0; j < results.quotes.length; j++) {
-      if (results.quotes[j].volume !== 0) Quotes.push(results.quotes[j])
+      // if (results.quotes[j].volume !== 0) Quotes.push(results.quotes[j])
+      Quotes.push(results.quotes[j])
     }
     const O = Quotes[0].open
     const C = Quotes[Quotes.length - 1].close
@@ -123,7 +153,8 @@ async function handleButton5D(indicatorId, name, callback) {
     const results: ChartResultArray = (await updateButton(O)) as ChartResultArray
     if (results !== null) {
       for (let j = 0; j < results.quotes.length; j++) {
-        if (results.quotes[j].volume !== 0) Quotes.push(results.quotes[j])
+        // if (results.quotes[j].volume !== 0) Quotes.push(results.quotes[j])
+        Quotes.push(results.quotes[j])
       }
     }
     if (i == 0) {
@@ -409,6 +440,10 @@ interface YFD3ButtonsProps {
 /**
  *
  */
+interface MenuProps {
+  button: string
+  items: ItemsProps[]
+}
 const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
   const [buttonClicked, setButtonClicked] = useState('button-1D')
   const [indicatorClicked, setIndicatorClicked] = useState('button-VOL')
@@ -422,179 +457,185 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
     'flex-shrink-0 snap-center rounded-md bg-slate-50 px-1 py-0 md:px-2 md:py-1 font-bold text-black text-xs md:text-base md:w-full md:bg-blue-500 md:text-white md:hover:bg-blue-700'
   const clsH =
     'flex-shrink-0 snap-center rounded-md bg-slate-50 px-1 py-0 md:px-2 md:py-1 font-bold text-red-500 text-xs md:text-base underline md:no-underline md:w-full md:bg-pink-500 md:text-white md:hover:bg-pink-700'
+  /**
+  const B: MenuItemsProps[] = [] as MenuItemsProps
+  for (let i = 0; i < QuotesItems.length; i++) {
+    for (let j = 0; j < QuotesItems[i].items.length; j++) {
+      const N = QuotesItems[i].items[j]
+      const M: MenuItemsProps = { menuItem: N}
+      if (N.name === '1 D') B.push({ menuItem: N, action1: hanbleButton1D })
+      if (N.name === '5 D') B.push({ menuItem: N, action1: hanbleButton5D })
+    }
+  }
+  */
+  QuotesItems[0].items[0] = { ...QuotesItems[0].items[0], action1: handleButton1D }
+  QuotesItems[0].items[1] = { ...QuotesItems[0].items[1], action1: handleButton5D }
+  QuotesItems[0].items[2] = { ...QuotesItems[0].items[2], action1: handleButton1M }
+  QuotesItems[0].items[3] = { ...QuotesItems[0].items[3], action1: handleButton6M }
+  QuotesItems[0].items[4] = { ...QuotesItems[0].items[4], action1: handleButtonYTD }
+  QuotesItems[0].items[5] = { ...QuotesItems[0].items[5], action1: handleButton1Y }
+  QuotesItems[0].items[6] = { ...QuotesItems[0].items[6], action1: handleButton5Y }
+  for (let i = 0; i < IndicatorsItems.length; i++) {
+    for (let j = 0; j < IndicatorsItems[i].items.length; j++) {
+      IndicatorsItems[i].items[j] = {
+        ...IndicatorsItems[i].items[j],
+        action2: handleIndicatorButton,
+      }
+    }
+  }
+  const buttonItems: MenuProps[] = [
+    {
+      button: 'MenuQuotes',
+      items: QuotesItems,
+    },
+    {
+      button: 'MenuIndicators',
+      items: IndicatorsItems,
+    },
+    {
+      button: 'MenuStrategies',
+      items: StrategiesItems,
+    },
+  ]
+  const origButtons: ItemProps[] = [
+    { name: 'button-1D', action1: handleButton1D },
+    { name: 'button-5D', action1: handleButton5D },
+    { name: 'button-1M', action1: handleButton1M },
+    { name: 'button-6M', action1: handleButton6M },
+    { name: 'button-YTD', action1: handleButtonYTD },
+    { name: 'button-1Y', action1: handleButton1Y },
+    { name: 'button-5Y', action1: handleButton5Y },
+    { name: 'button-VOL', action2: handleIndicatorButton },
+    { name: 'button-RSI', action2: handleIndicatorButton },
+    { name: 'button-ATR', action2: handleIndicatorButton },
+    { name: 'button-MCI', action2: handleIndicatorButton },
+    { name: 'button-MACD', action2: handleIndicatorButton },
+  ]
   for (let i = 0; i < nodes.length; i++) {
     const id = d3.select(nodes[i]).attr('id')
     switch (id) {
       case 'button-1D':
-        d3.select(nodes[i]).on('click', function (event, d) {
-          nameRef.current = d3.select(this).attr('data-name')
-          handleButton1D(indicatorClicked, nameRef.current, onButtonClicked)
-          d3.select(this).attr('class', clsH)
-          setButtonClicked('button-1D')
-          router.refresh()
-          d3.select(this).attr('class', clsH)
-        })
-        if (buttonClicked === 'button-1D') {
-          d3.select(nodes[i]).attr('class', clsH)
-        } else {
-          d3.select(nodes[i]).attr('class', cls)
-        }
-        break
       case 'button-5D':
-        d3.select(nodes[i]).on('click', function (event, d) {
-          nameRef.current = d3.select(this).attr('data-name')
-          handleButton5D(indicatorClicked, nameRef.current, onButtonClicked)
-          d3.select(this).attr('class', clsH)
-          setButtonClicked('button-5D')
-          router.refresh()
-        })
-        if (buttonClicked === 'button-5D') {
-          d3.select(nodes[i]).attr('class', clsH)
-        } else {
-          d3.select(nodes[i]).attr('class', cls)
-        }
-        break
       case 'button-1M':
-        d3.select(nodes[i]).on('click', function (event, d) {
-          nameRef.current = d3.select(this).attr('data-name')
-          handleButton1M(indicatorClicked, nameRef.current, onButtonClicked)
-          d3.select(this).attr('class', clsH)
-          setButtonClicked('button-1M')
-          router.refresh()
-        })
-        if (buttonClicked === 'button-1M') {
-          d3.select(nodes[i]).attr('class', clsH)
-        } else {
-          d3.select(nodes[i]).attr('class', cls)
-        }
-        break
       case 'button-6M':
-        d3.select(nodes[i]).on('click', function (event, d) {
-          nameRef.current = d3.select(this).attr('data-name')
-          handleButton6M(indicatorClicked, nameRef.current, onButtonClicked)
-          d3.select(this).attr('class', clsH)
-          setButtonClicked('button-6M')
-          router.refresh()
-        })
-        if (buttonClicked === 'button-6M') {
-          d3.select(nodes[i]).attr('class', clsH)
-        } else {
-          d3.select(nodes[i]).attr('class', cls)
-        }
-        break
       case 'button-YTD':
-        d3.select(nodes[i]).on('click', function (event, d) {
-          nameRef.current = d3.select(this).attr('data-name')
-          handleButtonYTD(indicatorClicked, nameRef.current, onButtonClicked)
-          d3.select(this).attr('class', clsH)
-          setButtonClicked('button-YTD')
-          router.refresh()
-        })
-        if (buttonClicked === 'button-YTD') {
-          d3.select(nodes[i]).attr('class', clsH)
-        } else {
-          d3.select(nodes[i]).attr('class', cls)
-        }
-        break
       case 'button-1Y':
-        d3.select(nodes[i]).on('click', function (event, d) {
-          nameRef.current = d3.select(this).attr('data-name')
-          handleButton1Y(indicatorClicked, nameRef.current, onButtonClicked)
-          d3.select(this).attr('class', clsH)
-          setButtonClicked('button-1Y')
-          router.refresh()
-        })
-        if (buttonClicked === 'button-1Y') {
-          d3.select(nodes[i]).attr('class', clsH)
-        } else {
-          d3.select(nodes[i]).attr('class', cls)
-        }
-        break
       case 'button-5Y':
         d3.select(nodes[i]).on('click', function (event, d) {
           nameRef.current = d3.select(this).attr('data-name')
+          origButtons.forEach((item) => {
+            if (item.name === id) {
+              if (item.action1) item.action1(indicatorClicked, nameRef.current, onButtonClicked)
+            }
+          })
           handleButton5Y(indicatorClicked, nameRef.current, onButtonClicked)
           d3.select(this).attr('class', clsH)
-          setButtonClicked('button-5Y')
+          setButtonClicked(id)
           router.refresh()
         })
-        if (buttonClicked === 'button-5Y') {
+        if (buttonClicked === id) {
           d3.select(nodes[i]).attr('class', clsH)
         } else {
           d3.select(nodes[i]).attr('class', cls)
         }
         break
       case 'button-VOL':
-        d3.select(nodes[i]).on('click', function (event, d) {
-          nameRef.current = d3.select(this).attr('data-name')
-          handleIndicatorButton('button-VOL', buttonClicked, nameRef.current, onButtonClicked)
-          d3.select(this).attr('class', clsH)
-          setIndicatorClicked('button-VOL')
-          router.refresh()
-        })
-        if (indicatorClicked === 'button-VOL') {
-          d3.select(nodes[i]).attr('class', clsH)
-        } else {
-          d3.select(nodes[i]).attr('class', cls)
-        }
-        break
       case 'button-RSI':
-        d3.select(nodes[i]).on('click', function (event, d) {
-          nameRef.current = d3.select(this).attr('data-name')
-          handleIndicatorButton('button-RSI', buttonClicked, nameRef.current, onButtonClicked)
-          d3.select(this).attr('class', clsH)
-          setIndicatorClicked('button-RSI')
-          router.refresh()
-        })
-        if (indicatorClicked === 'button-RSI') {
-          d3.select(nodes[i]).attr('class', clsH)
-        } else {
-          d3.select(nodes[i]).attr('class', cls)
-        }
-        break
       case 'button-ATR':
-        d3.select(nodes[i]).on('click', function (event, d) {
-          nameRef.current = d3.select(this).attr('data-name')
-          handleIndicatorButton('button-ATR', buttonClicked, nameRef.current, onButtonClicked)
-          d3.select(this).attr('class', clsH)
-          setIndicatorClicked('button-ATR')
-          router.refresh()
-        })
-        if (indicatorClicked === 'button-ATR') {
-          d3.select(nodes[i]).attr('class', clsH)
-        } else {
-          d3.select(nodes[i]).attr('class', cls)
-        }
-        break
       case 'button-MFI':
-        d3.select(nodes[i]).on('click', function (event, d) {
-          nameRef.current = d3.select(this).attr('data-name')
-          handleIndicatorButton('button-MFI', buttonClicked, nameRef.current, onButtonClicked)
-          d3.select(this).attr('class', clsH)
-          setIndicatorClicked('button-MFI')
-          router.refresh()
-        })
-        if (indicatorClicked === 'button-MFI') {
-          d3.select(nodes[i]).attr('class', clsH)
-        } else {
-          d3.select(nodes[i]).attr('class', cls)
-        }
-        break
       case 'button-MACD':
         d3.select(nodes[i]).on('click', function (event, d) {
           nameRef.current = d3.select(this).attr('data-name')
-          handleIndicatorButton('button-MACD', buttonClicked, nameRef.current, onButtonClicked)
+          origButtons.forEach((item) => {
+            if (item.name === id) {
+              if (item.action2) item.action2(id, buttonClicked, nameRef.current, onButtonClicked)
+            }
+          })
           d3.select(this).attr('class', clsH)
-          setIndicatorClicked('button-MACD')
+          setIndicatorClicked(id)
           router.refresh()
         })
-        if (indicatorClicked === 'button-MACD') {
+        if (indicatorClicked === id) {
           d3.select(nodes[i]).attr('class', clsH)
         } else {
           d3.select(nodes[i]).attr('class', cls)
         }
         break
+      case 'MenuQuotes':
+      case 'MenuIndicators':
+      case 'MenuStrategies':
+        d3.select(nodes[i]).on('click', function (event, d) {
+          console.log('%s clicked', id)
+          let menuItemsId
+          if (id === 'MenuQuotes') {
+            menuItemsId = d3.select('body').select('#ItemsQuotes')
+          } else if (id === 'MenuIndicators') {
+            menuItemsId = d3.select('body').select('#ItemsIndicators')
+          } else {
+            menuItemsId = d3.select('body').select('#ItemsStrategies')
+          }
+          const B = menuItemsId.selectAll('button')
+          const N = B.nodes()
+          console.log('N', N)
+          for (let j = 0; j < N.length; j++) {
+            // catch onClick event
+            d3.select(N[j]).on('click', function () {
+              const html = d3.select(this).html()
+              console.log('%s clicked', html)
+              nameRef.current = d3.select(this).attr('data-name')
+              buttonItems.forEach((btn) => {
+                if (btn.button === id) {
+                  const btns = btn.items
+                  for (let k = 0; k < btns.length; k++) {
+                    const ids = btns[k].items
+                    for (let l = 0; l < ids.length; l++) {
+                      if (html === ids[l].name) {
+                        const id = html
+                      }
+                    }
+                  }
+                }
+              })
+            })
+            // catch on mouseover event
+            d3.select(N[j]).on('mouseover', function (event) {
+              buttonItems.forEach((btn) => {
+                const html = d3.select(this).html()
+                if (btn.button === id) {
+                  const btns = btn.items
+                  for (let k = 0; k < btns.length; k++) {
+                    const ids = btns[k].items
+                    for (let l = 0; l < ids.length; l++) {
+                      if (html === ids[l].name) {
+                        const fullName = ids[l].fullName
+                        const description = ids[l].description
+                        if (fullName !== undefined) {
+                          console.log('fullName:', fullName)
+                          const pRect = this.parentNode.getBoundingClientRect()
+                          tooltip
+                            .style('left', pRect.left - 10 + 'px')
+                            .style('top', pRect.top - 100 + 'px')
+                          tooltip.html(fullName).style('opacity', 1)
+                        }
+                        if (description !== undefined) {
+                          dialogtip.style('right', '50px').style('top', '150px')
+                          dialogtip.html(description).style('opacity', 1)
+                        }
+                      }
+                    }
+                  }
+                }
+              })
+            })
+            d3.select(N[j]).on('mouseout', function (event) {
+              tooltip.style('opacity', 0)
+              dialogtip.style('opacity', 0)
+            })
+          }
+        })
+        break
       default:
+        console.log('button ID', id)
         break
     }
   }
@@ -681,26 +722,15 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
         const id = d3.select(nodes[i]).attr('id')
         switch (id) {
           case 'button-1D':
-            d3.select(nodes[i]).attr('data-name', nameRef.current)
-            break
           case 'button-5D':
-            d3.select(nodes[i]).attr('data-name', nameRef.current)
-            break
           case 'button-1M':
-            d3.select(nodes[i]).attr('data-name', nameRef.current)
-            break
           case 'button-6M':
-            d3.select(nodes[i]).attr('data-name', nameRef.current)
-            break
           case 'button-YTD':
-            d3.select(nodes[i]).attr('data-name', nameRef.current)
-            break
           case 'button-1Y':
-            d3.select(nodes[i]).attr('data-name', nameRef.current)
-            break
           case 'button-5Y':
             d3.select(nodes[i]).attr('data-name', nameRef.current)
             break
+
           default:
             break
         }

@@ -77,5 +77,6 @@ module.exports = {
     require('@tailwindcss/typography'),
     '@tailwindcss/aspect-ratio',
     require('tailwind-scrollbar-hide'),
+    require('@headlessui/tailwindcss')
   ],
 }
