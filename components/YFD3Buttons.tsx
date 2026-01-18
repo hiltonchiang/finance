@@ -25,6 +25,7 @@ import {
 export interface ButtonClickedProps {
   id: string
   result: CandlestickChartProps
+  strategyId?: string
 }
 const TooltipCls =
   'max-w-[150px] md:max-w-[300px] bg-stone-900 -translate-x-6 translate-y-4 text-base text-stone-300 dark:text-lime-300 border-2 border-blue-500 p-4'
@@ -70,7 +71,7 @@ const stopSpinner = () => {
  *
  */
 const showInterDiff = (open, close, text) => {
-  console.log('showInterDiff', open, close, text)
+  // console.log('showInterDiff', open, close, text)
   const D1 = d3.selectAll('main').select('#quoteCompare').select('#IntraDay')
   if (D1) {
     D1.html(text)
@@ -87,7 +88,7 @@ const showInterDiff = (open, close, text) => {
   if (D4) {
     const d = close - open
     const p = (d / open) * 100.0
-    console.log('p', p)
+    // console.log('p', p)
     if (d > 0) {
       D4.attr('class', 'text-center text-xs text-green-700 md:text-base')
       const s = '+' + d.toFixed(2) + '/+' + p.toFixed(2) + '%'
@@ -102,8 +103,8 @@ const showInterDiff = (open, close, text) => {
 /**
  *
  */
-async function handleButton1D(indicatorId, name, callback) {
-  console.log('button1D clicked')
+async function handleButton1D(indicatorId, name, callback, strategyId?) {
+  console.log('button1D clicked indicatorId', indicatorId)
   startSpinner()
   const today = new Date()
   const [estTime1, estTime2] = await getOpenCloseTime()
@@ -115,11 +116,16 @@ async function handleButton1D(indicatorId, name, callback) {
   const Quotes: ChartResultArrayQuote[] = [] as ChartResultArrayQuote[]
   const O: YFProps = { symbol: name, options: queryOptions }
   const results = await updateButton(O)
-  console.log('YFD3Buttons actions replied results', results)
+  // console.log('handleButton1D replied results', results)
   if (results !== null) {
     for (let j = 0; j < results.quotes.length; j++) {
-      // if (results.quotes[j].volume !== 0) Quotes.push(results.quotes[j])
-      Quotes.push(results.quotes[j])
+      if (results.quotes[j].volume !== 0) Quotes.push(results.quotes[j])
+      // Quotes.push(results.quotes[j])
+    }
+    if (Quotes.length == 0) {
+      for (let j = 0; j < results.quotes.length; j++) {
+        Quotes.push(results.quotes[j])
+      }
     }
     const O = Quotes[0].open
     const C = Quotes[Quotes.length - 1].close
@@ -134,7 +140,7 @@ async function handleButton1D(indicatorId, name, callback) {
 /**
  *
  */
-async function handleButton5D(indicatorId, name, callback) {
+async function handleButton5D(indicatorId, name, callback, strategyId?) {
   console.log('button5D clicked')
   startSpinner()
   const interval = 30 * 60 * 1000
@@ -155,18 +161,19 @@ async function handleButton5D(indicatorId, name, callback) {
     const results: ChartResultArray = (await updateButton(O)) as ChartResultArray
     if (results !== null) {
       for (let j = 0; j < results.quotes.length; j++) {
-        // if (results.quotes[j].volume !== 0) Quotes.push(results.quotes[j])
-        Quotes.push(results.quotes[j])
+        if (results.quotes[j].volume !== 0) Quotes.push(results.quotes[j])
+        // Quotes.push(results.quotes[j])
       }
     }
     if (i == 0) {
       const startDate = fiveDays[4]
       const dt = Math.trunc((5 * 24 * 60) / Quotes.length)
-      console.log('5D', startDate, Quotes.length, dt)
+      // console.log('5D', startDate, Quotes.length, dt)
       for (let i = 0; i < Quotes.length; i++) {
         Quotes[i].date = new Date(startDate.getTime() - 13 * 60 * 60 * 1000 + i * dt * 60 * 1000)
         // console.log('5D quotes', Quotes[i].date, Quotes[i].close)
       }
+      // console.log('handleButton5D Quotes', Quotes)
       if (results !== null) {
         const O = Quotes[0].open
         const C = Quotes[Quotes.length - 1].close
@@ -183,7 +190,7 @@ async function handleButton5D(indicatorId, name, callback) {
 /**
  *
  */
-async function handleButton1M(indicatorId, name, callback) {
+async function handleButton1M(indicatorId, name, callback, strategyId?) {
   console.log('button1M clicked')
   startSpinner()
   const [tmp, estTime2] = await getOpenCloseTime()
@@ -195,7 +202,7 @@ async function handleButton1M(indicatorId, name, callback) {
   }
   const O: YFProps = { symbol: name, options: queryOptions }
   const results = await updateButton(O)
-  console.log('YFD3Buttons actions replied results', results)
+  // console.log('YFD3Buttons actions replied results', results)
   if (results !== null) {
     const R: CandlestickChartProps = { title: name, D: results }
     const B: ButtonClickedProps = { id: indicatorId, result: R }
@@ -206,7 +213,7 @@ async function handleButton1M(indicatorId, name, callback) {
 /**
  *
  */
-async function handleButton6M(indicatorId, name, callback) {
+async function handleButton6M(indicatorId, name, callback, strategyId?) {
   console.log('button6M clicked')
   startSpinner()
   const [tmp, estTime2] = await getOpenCloseTime()
@@ -218,7 +225,7 @@ async function handleButton6M(indicatorId, name, callback) {
   }
   const O: YFProps = { symbol: name, options: queryOptions }
   const results = await updateButton(O)
-  console.log('YFD3Buttons actions replied results', results)
+  // console.log('YFD3Buttons actions replied results', results)
   if (results !== null) {
     const R: CandlestickChartProps = { title: name, D: results }
     const B: ButtonClickedProps = { id: indicatorId, result: R }
@@ -229,16 +236,46 @@ async function handleButton6M(indicatorId, name, callback) {
 /**
  *
  */
-async function handleButtonYTD(indicatorId, name, callback) {
+async function handleButtonYTD(indicatorId, name, callback, strategyId?) {
   console.log('buttonYTD clicked')
   startSpinner()
+  const daysBetween = (startDate, endDate) => {
+    const oneDay = 1000 * 60 * 60 * 24
+    const startUTC = Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
+    const endUTC = Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate())
+    const differenceMs = Math.abs(endUTC - startUTC)
+    return Math.floor(differenceMs / oneDay)
+  }
   const year = new Date().getFullYear()
   const [tmp, estTime2] = await getOpenCloseTime()
   const estTime1 = new Date(year + '-01-01')
+  const sDate = estTime2.setHours(0, 0, 0, 0)
+  const nDay = new Date(sDate)
+  const diffDays = daysBetween(estTime1, nDay)
+  // I need 400 quotes data
+  let Interval:
+    | '5m'
+    | '1m'
+    | '2m'
+    | '15m'
+    | '30m'
+    | '60m'
+    | '90m'
+    | '1h'
+    | '1d'
+    | '5d'
+    | '1wk'
+    | '1mo'
+    | '3mo'
+    | undefined = '1d'
+  if (diffDays > 180) Interval = '5d'
+  if (diffDays <= 180 && diffDays > 30) Interval = '1d'
+  if (diffDays <= 30 && diffDays > 5) Interval = '30m'
+  if (diffDays <= 5) Interval = '15m'
   const queryOptions: ChartOptionsWithReturnArray = {
     period1: estTime1,
     period2: estTime2,
-    interval: '5d',
+    interval: Interval,
   }
   const O: YFProps = { symbol: name, options: queryOptions }
   const results = await updateButton(O)
@@ -253,7 +290,7 @@ async function handleButtonYTD(indicatorId, name, callback) {
 /**
  *
  */
-async function handleButton1Y(indicatorId, name, callback) {
+async function handleButton1Y(indicatorId, name, callback, strategyId?) {
   console.log('button1Y clicked')
   startSpinner()
   const [tmp, estTime2] = await getOpenCloseTime()
@@ -276,7 +313,7 @@ async function handleButton1Y(indicatorId, name, callback) {
 /**
  *
  */
-async function handleButton5Y(indicatorId, name, callback) {
+async function handleButton5Y(indicatorId, name, callback, strategyId?) {
   console.log('button5Y clicked')
   startSpinner()
   const [tmp, estTime2] = await getOpenCloseTime()
@@ -284,7 +321,7 @@ async function handleButton5Y(indicatorId, name, callback) {
   const queryOptions: ChartOptionsWithReturnArray = {
     period1: estTime1,
     period2: estTime2,
-    interval: '1mo',
+    interval: '1wk',
   }
   const O: YFProps = { symbol: name, options: queryOptions }
   const results = await updateButton(O)
@@ -300,30 +337,37 @@ async function handleButton5Y(indicatorId, name, callback) {
  *
  */
 async function handleIndicatorButton(indicatorId, buttonId, name, callback) {
-  console.log('buttonVOL clicked')
   switch (buttonId) {
     case 'button-1D':
+    case '1 D':
       return handleButton1D(indicatorId, name, callback)
       break
     case 'button-5D':
+    case '5 D':
       return handleButton5D(indicatorId, name, callback)
       break
     case 'button-1M':
+    case '1 M':
       return handleButton1M(indicatorId, name, callback)
       break
     case 'button-6M':
+    case '6 M':
       return handleButton6M(indicatorId, name, callback)
       break
     case 'button-1Y':
+    case '1 Y':
       return handleButton1Y(indicatorId, name, callback)
       break
     case 'button-5Y':
+    case '5 Y':
       return handleButton5Y(indicatorId, name, callback)
       break
     case 'button-YTD':
-      return handleButton5D(indicatorId, name, callback)
+    case 'YTD':
+      return handleButtonYTD(indicatorId, name, callback)
       break
     default:
+      console.log('handleIndicatorButton', buttonId)
       break
   }
 }
@@ -533,7 +577,6 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
               if (item.action1) item.action1(indicatorClicked, nameRef.current, onButtonClicked)
             }
           })
-          handleButton5Y(indicatorClicked, nameRef.current, onButtonClicked)
           d3.select(this).attr('class', clsH)
           setButtonClicked(id)
           router.refresh()
@@ -595,7 +638,39 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
                     const ids = btns[k].items
                     for (let l = 0; l < ids.length; l++) {
                       if (html === ids[l].name) {
-                        const id = html
+                        const min = d3.select('body').select('#MenuItemName')
+                        if (min) {
+                          const Q = min.select('#Quotes')
+                          const I = min.select('#Indicators')
+                          const S = min.select('#Strategies')
+                          if (id === 'MenuQuotes' && Q !== null) {
+                            Q.html(html)
+                            setQuotesButton(html)
+                            const action = ids[l].action1 ?? null
+                            if (action) {
+                              action(indicatorsButton, nameRef.current, onButtonClicked)
+                              router.refresh()
+                            }
+                          } else if (id === 'MenuIndicators' && I !== null) {
+                            I.html(html)
+                            setIndicatorsButton(html)
+                            const action = ids[l].action2 ?? null
+                            const strategyName = ids[l].strategyName ?? null
+                            if (strategyName) {
+                              setStrategiesButton(strategyName)
+                              if (S !== null) S.html(strategyName)
+                            }
+                            //console.log('action', action)
+                            if (action) {
+                              action(html, quotesButton, nameRef.current, onButtonClicked)
+                              router.refresh()
+                            }
+                          } else if (id === 'MenuStrategies' && S !== null) {
+                            S.html(html)
+                            setStrategiesButton(html)
+                          }
+                        }
+                        break
                       }
                     }
                   }
@@ -651,9 +726,9 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
             // highlight selected item
             const dispId = d3.select(N[j]).html()
             if (
-              dispId === quotesButton ||
-              dispId === indicatorsButton ||
-              dispId === strategiesButton
+              (dispId === quotesButton && id === 'MenuQuotes') ||
+              (dispId === indicatorsButton && id === 'MenuIndicators') ||
+              (dispId === strategiesButton && id === 'MenuStrategies')
             ) {
               d3.select(N[j]).attr('class', menuItemClassHighlight)
             } else {
@@ -663,7 +738,7 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
         })
         break
       default:
-        console.log('button ID', id)
+        // console.log('button ID', id)
         break
     }
   }
@@ -729,8 +804,8 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
         coredata.html(
           `<span>US Market will open in ${h} hours ${m} minutes later.</span>${spanTag}`
         )
-        if (now > preMarketTime && buttonClicked === 'button-1D')
-          handleButton1D(indicatorId, name, callback)
+        if (now > preMarketTime && quotesButton === '1 D')
+          handleButton1D(indicatorsButton, name, callback)
       } else if (now >= openTime && now < closeTime) {
         const d = closeTime - now
         const h = Math.floor(d / 3600)
@@ -738,11 +813,14 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
         coredata.html(
           `<span>US Market will close in ${h} hours ${m} minutes later.</span> ${spanTag}`
         )
-        if (buttonClicked === 'button-1D') handleButton1D(indicatorId, name, callback)
+        if (quotesButton === '1 D') handleButton1D(indicatorsButton, name, callback)
       } else {
         coredata.html(`<span>US Market is closed.</span>${spanTag}`)
       }
     }
+    emitter.on('setTheme', (data) => {
+      router.refresh()
+    })
     emitter.on('searchTicker', (data) => {
       console.log('Event "searchTicker" emitted with data:', data)
       nameRef.current = data.ticker[0]
@@ -758,15 +836,46 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
           case 'button-5Y':
             d3.select(nodes[i]).attr('data-name', nameRef.current)
             break
-
+          case 'MenuQuotes':
+          case 'MenuIndicators':
+          case 'MenuStrategies':
+            {
+              let menuItemsId
+              if (id === 'MenuQuotes') {
+                menuItemsId = d3.select('body').select('#ItemsQuotes')
+              } else if (id === 'MenuIndicators') {
+                menuItemsId = d3.select('body').select('#ItemsIndicators')
+              } else {
+                menuItemsId = d3.select('body').select('#ItemsStrategies')
+              }
+              const B = menuItemsId.selectAll('button')
+              const N = B.nodes()
+              for (let j = 0; j < N.length; j++) {
+                d3.select(N[j]).attr('data-name', nameRef.current)
+              }
+            }
+            break
           default:
             break
         }
       }
-      handleButton1D(indicatorClicked, data.ticker[0], onButtonClicked)
+      const min = d3.select('body').select('#MenuItemName')
+      // console.log('search min', min.node())
+      if (min) {
+        const Q = min.select('#Quotes')
+        const I = min.select('#Indicators')
+        const S = min.select('#Strategies')
+        Q.html('1 D')
+        setQuotesButton('1 D')
+        I.html('VOL')
+        setIndicatorsButton('VOL')
+        S.html('RSI2')
+        setStrategiesButton('RSI2')
+      }
+      handleButton1D('VOL', data.ticker[0], onButtonClicked)
     })
     if (Date.now() - coreDataRef.current > 2 * 1000) {
-      showCoreData(indicatorClicked, nameRef.current, onButtonClicked)
+      showCoreData(indicatorsButton, nameRef.current, onButtonClicked)
       coreDataRef.current = Date.now()
     }
     const oneMTimeout = setInterval(() => {

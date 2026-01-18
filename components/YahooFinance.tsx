@@ -45,7 +45,7 @@ const YF = async ({ symbol, options }: YFProps) => {
         </MenuButton>
         <MenuItems transition className={menuItemsClsQuotes} id="ItemsQuotes" static>
           {QuotesItems.map((E, idx) => (
-            <div key={idx}>
+            <span key={idx}>
               {E.items.map((item) => (
                 <MenuItem key={item.name}>
                   <button
@@ -57,7 +57,7 @@ const YF = async ({ symbol, options }: YFProps) => {
                   </button>
                 </MenuItem>
               ))}
-            </div>
+            </span>
           ))}
         </MenuItems>
       </Menu>
@@ -102,8 +102,8 @@ const YF = async ({ symbol, options }: YFProps) => {
           <ChevronDownIcon aria-hidden="true" className="-mr-1 size-5 text-gray-400" />
         </MenuButton>
         <MenuItems transition className={menuItemsClsStrategies} id="ItemsStrategies" static>
-          {StrategiesItems.map((E) => (
-            <>
+          {StrategiesItems.map((E, idx) => (
+            <span key={idx}>
               {E.items.map((item) => (
                 <MenuItem key={item.name}>
                   <button
@@ -115,7 +115,7 @@ const YF = async ({ symbol, options }: YFProps) => {
                   </button>
                 </MenuItem>
               ))}
-            </>
+            </span>
           ))}
         </MenuItems>
       </Menu>
@@ -132,8 +132,8 @@ const YF = async ({ symbol, options }: YFProps) => {
           <ChevronDownIcon aria-hidden="true" className="-mr-1 size-5 text-gray-400" />
         </MenuButton>
         <MenuItems transition className={menuItemsClsIndicators} id="ItemsIndicators" static>
-          {IndicatorsItems.map((E) => (
-            <>
+          {IndicatorsItems.map((E, idx) => (
+            <span key={idx}>
               {E.items.map((item) => (
                 <MenuItem key={item.name}>
                   <button
@@ -145,7 +145,7 @@ const YF = async ({ symbol, options }: YFProps) => {
                   </button>
                 </MenuItem>
               ))}
-            </>
+            </span>
           ))}
         </MenuItems>
       </Menu>
@@ -190,6 +190,12 @@ const YF = async ({ symbol, options }: YFProps) => {
     if (results !== null) {
       for (let j = 0; j < results.quotes.length; j++) {
         if (results.quotes[j].volume !== 0) Quotes.push(results.quotes[j])
+        // Quotes.push(results.quotes[j])
+      }
+      if (Quotes.length === 0) {
+        for (let j = 0; j < results.quotes.length; j++) {
+          Quotes.push(results.quotes[j])
+        }
       }
       results.quotes = Quotes
     }
@@ -271,16 +277,18 @@ const YF = async ({ symbol, options }: YFProps) => {
       <>
         <CandlestickChart title={symbol} D={results} />
         <div id="yahooFinance" className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <span className="text-center text-xs md:text-base" id="Quotes">
+          <div id="MenuItemName" className="grid grid-cols-3 gap-4">
+            <span className="text-center text-xs font-bold md:text-base" id="Quotes">
               1 D
             </span>
-            <span className="text-center text-xs md:text-base" id="Quotes">
+            <span className="text-center text-xs font-bold md:text-base" id="Indicators">
               VOL
             </span>
-            <span className="text-center text-xs md:text-base" id="Quotes"></span>
+            <span className="text-center text-xs font-bold md:text-base" id="Strategies">
+              RSI2
+            </span>
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div id="MenuItems" className="grid grid-cols-3 gap-4">
             {/*<RangeButtons /> */}
             {/*<IndicatorButtons /> */}
             <QuotesDropDown />
