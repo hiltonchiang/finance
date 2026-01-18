@@ -25,6 +25,11 @@ import {
   PPOConfig,
   PPOResult,
   ppo,
+  PVOConfig,
+  PVOResult,
+  pvo,
+  ROCConfig,
+  roc,
   RSIConfig,
   rsi,
   rsi2Strategy,
@@ -67,6 +72,8 @@ interface LineTotalPoint {
   cmo?: { adResult: number; cmoResult: number }
   ichimoku?: { tenkan: number; kijun: number; ssa: number; ssb: number; laggingSpan: number }
   ppo?: { ppoResult: number; signal: number; histogram: number }
+  pvo?: { pvoResult: number; signal: number; histogram: number }
+  roc?: number
   rsi?: number
   atr?: { trLine: number; atrLine: number }
   mfi?: number
@@ -228,6 +235,39 @@ const getTotalData = (D: ChartResultArray, id?: string): LineTotalPoint[] => {
             ppo: { ppoResult: result, signal: signal, histogram: histogram },
           })
         }
+      }
+      break
+    case 'PVO':
+      {
+        const pvoConfig: PVOConfig = { fast: 12, slow: 26, signal: 9 }
+        const pvoResult: PVOResult = pvo(volumeA, pvoConfig)
+        for (let i = 0; i < D.quotes.length; i++) {
+          const result = pvoResult.pvoResult[i]
+          const signal = pvoResult.signal[i]
+          const histogram = pvoResult.histogram[i]
+          lineTotalData.push({
+            x: xA[i],
+            y: closeA[i],
+            v: volumeA[i],
+            pvo: { pvoResult: result, signal: signal, histogram: histogram },
+          })
+        }
+      }
+      break
+    case 'ROC':
+      {
+        const rocConfig: ROCConfig = { period: 3 }
+        const rocResult: number[] = roc(closeA, rocConfig)
+        for (let i = 0; i < D.quotes.length; i++) {
+          const result = rocResult[i]
+          lineTotalData.push({
+            x: xA[i],
+            y: closeA[i],
+            v: volumeA[i],
+            roc: result,
+          })
+        }
+        console.log('ROC lineTotalData', lineTotalData)
       }
       break
     case 'button-RSI':
@@ -455,8 +495,21 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
       background: resolvedTheme === 'dark' ? '#121212' : '#F8F8F8',
       events: {
         mounted: (chartContext) => {
+          console.log('Chart Mounted, context', chartContext)
           // Capture the context on mount
           chartRef.current = chartContext
+        },
+      },
+      animations: {
+        enabled: true,
+        speed: 800,
+        animateGradually: {
+          enabled: true,
+          delay: 150, // Delay between data points animating
+        },
+        dynamicAnimation: {
+          enabled: true,
+          speed: 350,
         },
       },
     },
@@ -836,8 +889,13 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
             hidden: false,
             data: D4.map((d) => ({ x: d.x, y: d.y, strokeColor: '#BEF264' })),
           }
-          const yAxis4: ApexYAxis = yAxis3
-          if (yAxis4.title) yAxis4.title.text = 'kijun'
+          const yAxis4: ApexYAxis = {
+            ...yAxis3,
+            title: {
+              text: 'kijun',
+            },
+          }
+          // if (yAxis4.title) yAxis4.title.text = 'kijun'
           setOptionsArray([
             {
               type: 'line',
@@ -873,10 +931,20 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
           seriesLine2.data = D3
           seriesLine2.name = 'PPO'
           seriesLine2.color = '#A2E635'
-          const yAxisSignal = yAxis1
-          const yAxisHistogram = yAxis3
-          if (yAxisSignal.title) yAxisSignal.title.text = 'Signal'
-          if (yAxisHistogram.title) yAxisHistogram.title.text = 'Histogram'
+          const yAxisSignal: ApexYAxis = {
+            ...yAxis1,
+            title: {
+              text: 'Signal',
+            },
+          }
+          const yAxisHistogram: ApexYAxis = {
+            ...yAxis3,
+            title: {
+              text: 'Histogram',
+            },
+          }
+          //if (yAxisSignal.title) yAxisSignal.title.text = 'Signal'
+          //if (yAxisHistogram.title) yAxisHistogram.title.text = 'Histogram'
           setOptionsArray([
             {
               type: 'line',
@@ -929,6 +997,136 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
                 stroke: {
                   curve: 'smooth',
                 },
+                title: {
+                  ...Options.title, // Spread existing title options if any
+                  text: O.title,
+                },
+                subtitle: {
+                  ...Options.subtitle, // Spread existing subtitle options if any
+                  text: O.D.meta.longName,
+                },
+              },
+            },
+          ])
+        }
+        break
+      case 'PVO':
+        {
+          console.log('ApxCharts PVO')
+          for (let i = 0; i < lineTotalData.length; i++) {
+            const L = lineTotalData[i]
+            const pvo = lineTotalData[i].pvo ?? null
+            D3.push({ x: L.x, y: pvo ? pvo.pvoResult : null })
+            D4.push({ x: L.x, y: pvo ? pvo.signal : null })
+            D5.push({ x: L.x, y: pvo ? pvo.histogram : null })
+          }
+          if (yAxis3.title) yAxis3.title.text = 'PVO'
+          seriesLine.data = D1
+          seriesLine2.data = D3
+          seriesLine2.name = 'PVO'
+          seriesLine2.color = '#A2E635'
+          // const yAxisSignal = yAxis1
+          // const yAxisHistogram = yAxis3
+          // if (yAxisSignal.title) yAxisSignal.title.text = 'Signal'
+          // if (yAxisHistogram.title) yAxisHistogram.title.text = 'Histogram'
+          const yAxisSignal: ApexYAxis = {
+            ...yAxis1,
+            title: {
+              text: 'Signal',
+            },
+          }
+          const yAxisHistogram: ApexYAxis = {
+            ...yAxis3,
+            title: {
+              text: 'Histogram',
+            },
+          }
+          setOptionsArray([
+            {
+              type: 'line',
+              options: {
+                ...Options, // Spread existing options to preserve other settings
+                series: [seriesLine, seriesLine2],
+                yaxis: [yAxis1, yAxis3],
+                title: {
+                  ...Options.title, // Spread existing title options if any
+                  text: O.title,
+                },
+                subtitle: {
+                  ...Options.subtitle, // Spread existing subtitle options if any
+                  text: O.D.meta.longName,
+                },
+              },
+            },
+            {
+              type: 'area',
+              options: {
+                ...Options,
+                chart: {
+                  type: 'area',
+                },
+                dataLabels: {
+                  enabled: false,
+                },
+                series: [
+                  {
+                    name: 'PVO Signal',
+                    type: 'area',
+                    data: D4.map((d) => d.y),
+                    color: '#EAB308',
+                  },
+                  {
+                    name: 'PVO Histogram',
+                    type: 'area',
+                    data: D5.map((d) => d.y),
+                    color: '#C026D3',
+                  },
+                ],
+                yaxis: [yAxisSignal, yAxisHistogram],
+                xaxis: {
+                  type: 'datetime',
+                  labels: {
+                    datetimeUTC: false, // Set to false to use local time zone
+                  },
+                  categories: D1.map((t) => t.x.toISOString()),
+                },
+                stroke: {
+                  curve: 'smooth',
+                },
+                title: {
+                  ...Options.title, // Spread existing title options if any
+                  text: O.title,
+                },
+                subtitle: {
+                  ...Options.subtitle, // Spread existing subtitle options if any
+                  text: O.D.meta.longName,
+                },
+              },
+            },
+          ])
+        }
+        break
+      case 'ROC':
+        {
+          console.log('ApxCharts ROC')
+          for (let i = 0; i < lineTotalData.length; i++) {
+            const L = lineTotalData[i]
+            const roc = lineTotalData[i].roc ?? null
+            D3.push({ x: L.x, y: roc })
+          }
+          if (yAxis3.title) yAxis3.title.text = 'ROC'
+          console.log('ROC D3', D3)
+          seriesLine.data = D1
+          seriesLine2.data = D3
+          seriesLine2.name = 'ROC'
+          seriesLine2.color = '#A2E635'
+          setOptionsArray([
+            {
+              type: 'line',
+              options: {
+                ...Options, // Spread existing options to preserve other settings
+                series: [seriesLine, seriesLine2],
+                yaxis: [yAxis1, yAxis3],
                 title: {
                   ...Options.title, // Spread existing title options if any
                   text: O.title,

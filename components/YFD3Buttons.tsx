@@ -201,9 +201,12 @@ async function handleButton1M(indicatorId, name, callback, strategyId?) {
     interval: '1d',
   }
   const O: YFProps = { symbol: name, options: queryOptions }
-  const results = await updateButton(O)
+  const results: ChartResultArray = (await updateButton(O)) as ChartResultArray
   // console.log('YFD3Buttons actions replied results', results)
   if (results !== null) {
+    const O = results.quotes[0].open
+    const C = results.quotes[results.quotes.length - 1].close
+    showInterDiff(O, C, 'In 1M')
     const R: CandlestickChartProps = { title: name, D: results }
     const B: ButtonClickedProps = { id: indicatorId, result: R }
     callback(B)
@@ -224,9 +227,12 @@ async function handleButton6M(indicatorId, name, callback, strategyId?) {
     interval: '5d',
   }
   const O: YFProps = { symbol: name, options: queryOptions }
-  const results = await updateButton(O)
+  const results: ChartResultArray = (await updateButton(O)) as ChartResultArray
   // console.log('YFD3Buttons actions replied results', results)
   if (results !== null) {
+    const O = results.quotes[0].open
+    const C = results.quotes[results.quotes.length - 1].close
+    showInterDiff(O, C, 'In 6M')
     const R: CandlestickChartProps = { title: name, D: results }
     const B: ButtonClickedProps = { id: indicatorId, result: R }
     callback(B)
@@ -278,9 +284,12 @@ async function handleButtonYTD(indicatorId, name, callback, strategyId?) {
     interval: Interval,
   }
   const O: YFProps = { symbol: name, options: queryOptions }
-  const results = await updateButton(O)
-  console.log('YFD3Buttons actions replied results', results)
+  const results: ChartResultArray = (await updateButton(O)) as ChartResultArray
+  // console.log('handleButtonYTD actions replied results', results)
   if (results !== null) {
+    const O = results.quotes[0].open
+    const C = results.quotes[results.quotes.length - 1].close
+    showInterDiff(O, C, 'YTD')
     const R: CandlestickChartProps = { title: name, D: results }
     const B: ButtonClickedProps = { id: indicatorId, result: R }
     callback(B)
@@ -301,9 +310,12 @@ async function handleButton1Y(indicatorId, name, callback, strategyId?) {
     interval: '1wk',
   }
   const O: YFProps = { symbol: name, options: queryOptions }
-  const results = await updateButton(O)
-  console.log('YFD3Buttons actions replied results', results)
+  const results: ChartResultArray = (await updateButton(O)) as ChartResultArray
+  // console.log('YFD3Buttons actions replied results', results)
   if (results !== null) {
+    const O = results.quotes[0].open
+    const C = results.quotes[results.quotes.length - 1].close
+    showInterDiff(O, C, 'In 1Y')
     const R: CandlestickChartProps = { title: name, D: results }
     const B: ButtonClickedProps = { id: indicatorId, result: R }
     callback(B)
@@ -324,9 +336,12 @@ async function handleButton5Y(indicatorId, name, callback, strategyId?) {
     interval: '1wk',
   }
   const O: YFProps = { symbol: name, options: queryOptions }
-  const results = await updateButton(O)
-  console.log('YFD3Buttons actions replied results', results)
+  const results: ChartResultArray = (await updateButton(O)) as ChartResultArray
+  // console.log('YFD3Buttons actions replied results', results)
   if (results !== null) {
+    const O = results.quotes[0].open
+    const C = results.quotes[results.quotes.length - 1].close
+    showInterDiff(O, C, 'In 5Y')
     const R: CandlestickChartProps = { title: name, D: results }
     const B: ButtonClickedProps = { id: indicatorId, result: R }
     callback(B)
