@@ -1382,6 +1382,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
    */
   return (
     <div id="chart" className="relative">
+      <span id="marquee" className="block text-center md:hidden"></span>
       <div className="relative">
         {optionsArray.map((item, index) => (
           <ReactApexChart

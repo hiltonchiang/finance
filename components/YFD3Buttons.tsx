@@ -70,6 +70,13 @@ const stopSpinner = () => {
 /**
  *
  */
+function showMarquee(text) {
+  const M = d3.selectAll('main').select('#chart').select('#marquee')
+  if (M) M.html(text)
+}
+/**
+ *
+ */
 const showInterDiff = (open, close, text) => {
   // console.log('showInterDiff', open, close, text)
   const D1 = d3.selectAll('main').select('#quoteCompare').select('#IntraDay')
@@ -680,6 +687,7 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
                               action(html, quotesButton, nameRef.current, onButtonClicked)
                               router.refresh()
                             }
+                            showMarquee(ids[l].fullName)
                           } else if (id === 'MenuStrategies' && S !== null) {
                             S.html(html)
                             setStrategiesButton(html)
@@ -764,6 +772,7 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
      */
     const showCoreData = (indicatorId, name, callback) => {
       console.log('showCoreData, name', name)
+      const isMobile = window.matchMedia('(max-width: 768px)').matches
       const coredata = d3.select('#yahooFinance').select('#CoreData')
       const today = new Date()
       const year = today.toLocaleString('en-US', { timeZone: 'America/New_York', year: 'numeric' })
@@ -796,16 +805,16 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
       usToday = ': ' + easternDay + ', ' + usToday + ', est.'
       const spanTag = `<span className="opacity-0 md:opacity-100">US Now ${usToday}</span>`
       if (easternDay === 'Sunday') {
-        coredata.html(`<span>US Market is closed on Sunday<span>. ${spanTag}`)
+        coredata.html(`<span>US Market is closed on Sunday.</span>${spanTag}`)
         return
       }
       if (easternDay === 'Saturday') {
-        coredata.html(`<span>US Market is closed on Saturady.</span> ${spanTag}`)
+        coredata.html(`<span>US Market is closed on Saturady.</span>${spanTag}`)
         return
       }
       const [r, v] = isStockHoliday(today)
       if (r) {
-        coredata.html(`<span>US Market is closed on ${v}.</span> ${spanTag}`)
+        coredata.html(`<span>US Market is closed on ${v}.</span>${spanTag}`)
         return
       }
       const now = Number(hour) * 60 * 60 + Number(minute) * 60 + Number(second)
