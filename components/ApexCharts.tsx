@@ -5,6 +5,7 @@ import { ApexOptions } from 'apexcharts'
 import YahooFinance from 'yahoo-finance2'
 import emitter from '@/components/Emitter'
 import React, { useState, useEffect, useRef } from 'react'
+import SlideDescription from '@/components/SlideDescription'
 import useWindowDimensions from '@/components/WindowDimension'
 import { ChartResultArray } from 'yahoo-finance2/esm/src/modules/chart.js'
 import { ButtonClickedProps } from '@/components/YFD3Buttons'
@@ -33,6 +34,10 @@ import {
   RSIConfig,
   rsi,
   rsi2Strategy,
+  StochConfig,
+  StochResult,
+  stoch,
+  stochStrategy,
   ATRConfig,
   ATRResult,
   atr,
@@ -75,6 +80,7 @@ interface LineTotalPoint {
   pvo?: { pvoResult: number; signal: number; histogram: number }
   roc?: number
   rsi?: number
+  stoch?: { k: number; d: number }
   atr?: { trLine: number; atrLine: number }
   mfi?: number
   macd?: number
@@ -147,14 +153,15 @@ const getTotalData = (D: ChartResultArray, id?: string): LineTotalPoint[] => {
         const beta = 0.67
         const newAo = []
         for (let i = 0; i < D.quotes.length; i++) {
-          // const newAo = aoArray[i] * scale * beta
-          lineTotalData.push({
-            x: xA[i],
-            y: closeA[i],
-            v: volumeA[i],
-            ao: aoArray[i],
-            action: actionArray[i],
-          })
+          if (closeA[i]) {
+            lineTotalData.push({
+              x: xA[i],
+              y: closeA[i],
+              v: volumeA[i],
+              ao: aoArray[i],
+              action: actionArray[i],
+            })
+          }
         }
       }
       break
@@ -295,6 +302,30 @@ const getTotalData = (D: ChartResultArray, id?: string): LineTotalPoint[] => {
             y: closeA[i],
             v: volumeA[i],
             rsi: rsi,
+            action: actionArray[i],
+          })
+        }
+      }
+      break
+    case 'Stoch':
+      {
+        const stochConf: StochConfig = { kPeriod: 14, dPeriod: 3 }
+        const stochAsset: Asset = {
+          dates: xA,
+          openings: openA,
+          closings: closeA,
+          highs: highA,
+          lows: lowA,
+          volumes: volumeA,
+        }
+        const stochArray = stoch(highA, lowA, closeA, stochConf)
+        const actionArray = stochStrategy(stochAsset)
+        for (let i = 0; i < D.quotes.length; i++) {
+          lineTotalData.push({
+            x: xA[i],
+            y: closeA[i],
+            v: volumeA[i],
+            stoch: stochArray[i],
             action: actionArray[i],
           })
         }
@@ -462,7 +493,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
   const seriesLine: ApexAxisChartSeries = {
     name: 'Stock Price',
     type: 'line',
-    data: lineTotalData.map((item) => ({ x: item.x, y: item.y })),
+    data: lineTotalData.filter((item) => item.y !== null).map((item) => ({ x: item.x, y: item.y })),
     color: '#008FFB',
   }
   /**
@@ -471,7 +502,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
   const seriesLine2: ApexAxisChartSeries = {
     name: 'Stock Price',
     type: 'line',
-    data: lineTotalData.map((item) => ({ x: item.x, y: item.y })),
+    data: lineTotalData.filter((item) => item.y !== null).map((item) => ({ x: item.x, y: item.y })),
     color: '#A2E635',
   }
   /**
@@ -495,7 +526,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
       background: resolvedTheme === 'dark' ? '#121212' : '#F8F8F8',
       events: {
         mounted: (chartContext) => {
-          console.log('Chart Mounted, context', chartContext)
+          console.log('Chart Mounted, seriesLine/Line2', seriesLine)
           // Capture the context on mount
           chartRef.current = chartContext
         },
@@ -572,6 +603,13 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
             },
             zoom: {
               enabled: false,
+            },
+          },
+          grid: {
+            yaxis: {
+              lines: {
+                show: false,
+              },
             },
           },
           tooltip: {
@@ -677,37 +715,59 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
     const D5: LVProps[] = [] as LVProps[]
     for (let i = 0; i < lineTotalData.length; i++) {
       const L = lineTotalData[i]
-      D1.push({ x: L.x, y: L.y })
-      D2.push({ x: L.x, y: L.v })
+      if (L.y) {
+        D1.push({ x: L.x, y: L.y })
+        D2.push({ x: L.x, y: L.v })
+      }
+    }
+    const setTwoSeriesOptions = (series1, series2, yAxis1, yAxis2, annotations?) => {
+      setOptionsArray([
+        {
+          type: 'line',
+          options: {
+            ...Options, // Spread existing options to preserve other settings
+            series: [series1, series2],
+            yaxis: [yAxis1, yAxis2],
+            title: {
+              ...Options.title, // Spread existing title options if any
+              text: O.title,
+            },
+            subtitle: {
+              ...Options.subtitle, // Spread existing subtitle options if any
+              text: O.D.meta.longName,
+            },
+            annotations: {},
+          },
+        },
+      ])
+    }
+    const setThreeSeriesOptionsOneChart = (series1, series2, series3, yAxis1, yAxis2, yAxis3) => {
+      setOptionsArray([
+        {
+          type: 'line',
+          options: {
+            ...Options, // Spread existing options to preserve other settings
+            series: [series1, series2, series3],
+            yaxis: [yAxis1, yAxis2, yAxis3],
+            title: {
+              ...Options.title, // Spread existing title options if any
+              text: O.title,
+            },
+            subtitle: {
+              ...Options.subtitle, // Spread existing subtitle options if any
+              text: O.D.meta.longName,
+            },
+          },
+        },
+      ])
     }
     // const extraD: (number | null)[] = [] as (number | null)[]
     switch (B.id) {
       case 'button-VOL':
       case 'VOL':
-        // for (let i = 0; i < lineTotalData.length; i++) {
-        //  const L = lineTotalData[i]
-        //  D2.push({ x: L.x, y: L.v })
-        //}
         seriesLine.data = D1
         seriesColumn.data = D2
-        setOptionsArray([
-          {
-            type: 'line',
-            options: {
-              ...Options, // Spread existing options to preserve other settings
-              series: [seriesLine, seriesColumn],
-              yaxis: [yAxis1, yAxis2],
-              title: {
-                ...Options.title, // Spread existing title options if any
-                text: O.title,
-              },
-              subtitle: {
-                ...Options.subtitle, // Spread existing subtitle options if any
-                text: O.D.meta.longName,
-              },
-            },
-          },
-        ])
+        setTwoSeriesOptions(seriesLine, seriesColumn, yAxis1, yAxis2)
         break
       case 'AO':
         {
@@ -794,7 +854,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
                 },
                 stroke: {
                   lineCap: 'round',
-                  curve: ['monotoneCubic', 'stepline'],
+                  curve: ['smooth', 'stepline'],
                   width: [2, 3], // Line width for price series, 0 for volume series
                 },
               },
@@ -848,24 +908,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
         seriesLine2.data = D3
         seriesLine2.name = 'ChaikinOsc'
         seriesLine2.color = '#A2E635'
-        setOptionsArray([
-          {
-            type: 'line',
-            options: {
-              ...Options, // Spread existing options to preserve other settings
-              series: [seriesLine, seriesLine2],
-              yaxis: [yAxis1, yAxis3],
-              title: {
-                ...Options.title, // Spread existing title options if any
-                text: O.title,
-              },
-              subtitle: {
-                ...Options.subtitle, // Spread existing subtitle options if any
-                text: O.D.meta.longName,
-              },
-            },
-          },
-        ])
+        setTwoSeriesOptions(seriesLine, seriesLine2, yAxis1, yAxis3)
         break
       case 'Ichimoku':
         {
@@ -895,25 +938,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
               text: 'kijun',
             },
           }
-          // if (yAxis4.title) yAxis4.title.text = 'kijun'
-          setOptionsArray([
-            {
-              type: 'line',
-              options: {
-                ...Options, // Spread existing options to preserve other settings
-                series: [seriesLine, series3, seriesLine2],
-                yaxis: [yAxis1, yAxis4, yAxis3],
-                title: {
-                  ...Options.title, // Spread existing title options if any
-                  text: O.title,
-                },
-                subtitle: {
-                  ...Options.subtitle, // Spread existing subtitle options if any
-                  text: O.D.meta.longName,
-                },
-              },
-            },
-          ])
+          setThreeSeriesOptionsOneChart(seriesLine, series3, seriesLine2, yAxis1, yAxis4, yAxis3)
         }
         break
       case 'PPO':
@@ -943,8 +968,6 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
               text: 'Histogram',
             },
           }
-          //if (yAxisSignal.title) yAxisSignal.title.text = 'Signal'
-          //if (yAxisHistogram.title) yAxisHistogram.title.text = 'Histogram'
           setOptionsArray([
             {
               type: 'line',
@@ -1120,24 +1143,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
           seriesLine2.data = D3
           seriesLine2.name = 'ROC'
           seriesLine2.color = '#A2E635'
-          setOptionsArray([
-            {
-              type: 'line',
-              options: {
-                ...Options, // Spread existing options to preserve other settings
-                series: [seriesLine, seriesLine2],
-                yaxis: [yAxis1, yAxis3],
-                title: {
-                  ...Options.title, // Spread existing title options if any
-                  text: O.title,
-                },
-                subtitle: {
-                  ...Options.subtitle, // Spread existing subtitle options if any
-                  text: O.D.meta.longName,
-                },
-              },
-            },
-          ])
+          setTwoSeriesOptions(seriesLine, seriesLine2, yAxis1, yAxis3)
         }
         break
       case 'button-RSI':
@@ -1229,21 +1235,6 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
                 subtitle: {
                   ...Options.subtitle, // Spread existing subtitle options if any
                   text: O.D.meta.longName,
-                },
-                annotations: {
-                  /*
-                  xaxis: xAxisAnnotations.map((a) => ({
-                    x: a.x,
-                    x2: a.x2,
-                    fillColor: a.fillColor,
-                    opacity: a.opacity,
-                  })),
-                  points: pointAnnotations.map((p, idx) => ({
-                    x: p.x,
-                    y: p.y,
-                    marker: p.marker,
-                    label: p.label ?? undefined,
-                  })),*/
                 },
               },
             },
@@ -1382,7 +1373,8 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
    */
   return (
     <div id="chart" className="relative">
-      <span id="marquee" className="block text-center md:hidden"></span>
+      <SlideDescription />
+      <span id="marquee" className="block text-center md:hidden" data-description=""></span>
       <div className="relative">
         {optionsArray.map((item, index) => (
           <ReactApexChart

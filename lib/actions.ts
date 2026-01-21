@@ -253,3 +253,21 @@ export const getChartOptions = async (): Promise<YFProps> => {
     }, 1000)
   })
 }
+/*
+import { HfInference } from '@huggingface/inference';
+
+const hf = new HfInference(process.env.HF_ACCESS_TOKEN);
+
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const text = searchParams.get('text');
+
+  const result = await hf.zeroShotClassification({
+    model: 'facebook/bart-large-mnli',
+    inputs: text,
+    parameters: { candidate_labels: ['weather', 'navigation', 'calendar'] }
+  });
+
+  return Response.json(result);
+}
+*/

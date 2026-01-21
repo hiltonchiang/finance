@@ -28,9 +28,9 @@ export interface ButtonClickedProps {
   strategyId?: string
 }
 const TooltipCls =
-  'max-w-[150px] md:max-w-[300px] bg-stone-900 -translate-x-6 translate-y-4 text-base text-stone-300 dark:text-lime-300 border-2 border-blue-500 p-4'
+  ' max-w-[150px] md:max-w-[300px] bg-stone-900 -translate-x-6 translate-y-4 text-base text-stone-300 dark:text-lime-300 border-2 border-blue-500 p-4'
 const DialogtipCls =
-  'hidden md:block max-w-[150px] md:max-w-[500px] bg-stone-900 -translate-x-6 translate-y-4 text-base text-stone-300 dark:text-lime-300 border-2 border-blue-500 p-4'
+  'hidden md:whitespace-pre-wrap md:block max-w-[150px] md:max-w-[500px] bg-stone-900 -translate-x-6 translate-y-4 text-base text-stone-300 dark:text-lime-300 border-2 border-blue-500 p-4'
 
 const tooltip = d3
   .select('body')
@@ -70,9 +70,13 @@ const stopSpinner = () => {
 /**
  *
  */
-function showMarquee(text) {
+function showMarquee(fullName, description) {
   const M = d3.selectAll('main').select('#chart').select('#marquee')
-  if (M) M.html(text)
+  if (M) {
+    M.html(fullName)
+    M.attr('data-description', description)
+    M.attr('data-fullname', fullName)
+  }
 }
 /**
  *
@@ -134,9 +138,11 @@ async function handleButton1D(indicatorId, name, callback, strategyId?) {
         Quotes.push(results.quotes[j])
       }
     }
-    const O = Quotes[0].open
-    const C = Quotes[Quotes.length - 1].close
-    showInterDiff(O, C, 'InterDay')
+    if (Quotes.length > 0) {
+      const O = Quotes[0].open
+      const C = Quotes[Quotes.length - 1].close
+      showInterDiff(O, C, 'InterDay')
+    }
     results.quotes = Quotes
     const R: CandlestickChartProps = { title: name, D: results }
     const B: ButtonClickedProps = { id: indicatorId, result: R }
@@ -687,7 +693,7 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
                               action(html, quotesButton, nameRef.current, onButtonClicked)
                               router.refresh()
                             }
-                            showMarquee(ids[l].fullName)
+                            showMarquee(ids[l].fullName, ids[l].description)
                           } else if (id === 'MenuStrategies' && S !== null) {
                             S.html(html)
                             setStrategiesButton(html)

@@ -360,9 +360,13 @@ const YF = async ({ symbol, options }: YFProps) => {
                 className="absolute bottom-0 -ml-0.5 h-1 translate-y-2 transform"
                 style={{ left: interLeft, backgroundColor: openCloseColor, width: openCloseP }}
               />
-              <div className="text-left text-xs md:text-base">{M.regularMarketDayLow}</div>
+              <div className="text-left text-xs md:text-base">
+                {M.regularMarketDayLow?.toFixed(2)}
+              </div>
               <div className="text-center text-xs md:text-base">InterDay</div>
-              <div className="text-right text-xs md:text-base">{M.regularMarketDayHigh}</div>
+              <div className="text-right text-xs md:text-base">
+                {M.regularMarketDayHigh?.toFixed(2)}
+              </div>
               <div
                 className="absolute size-3 translate-y-4 transform rounded-full bg-red-500 md:size-4 md:translate-y-6"
                 style={{ left: dayCloseP }}
@@ -372,13 +376,13 @@ const YF = async ({ symbol, options }: YFProps) => {
                 style={{ left: dayOpenP }}
               />
               <div
-                className="absolute  translate-y-12 text-xs md:text-base"
+                className="absolute translate-y-8 text-xs md:translate-y-12 md:text-base"
                 style={{ left: dayCloseP }}
               >
                 {M.regularMarketPrice}
               </div>
               <div
-                className="absolute translate-y-12 text-xs md:text-base"
+                className="absolute translate-y-8 text-xs md:translate-y-12 md:text-base"
                 style={{ left: dayOpenP }}
               >
                 {Q.regularMarketOpen}

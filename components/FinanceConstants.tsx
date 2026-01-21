@@ -4,7 +4,9 @@ export interface ItemProps {
   fullName?: string
   description?: string
   indicatorName?: string
+  indicatorIndex?: { idx1: number; idx2: number }
   strategyName?: string
+  strategyIndex?: { idx1: number; idx2: number }
   action1?: (indicatorId, name, callback, strategId?) => void
   action2?: (indicatorId, buttonId, name, callback, strategId?) => void
 }
@@ -202,73 +204,92 @@ export const IndicatorsItems: ItemsProps[] = [
       {
         name: 'AO',
         fullName: 'awesomeOscillator',
-        description: `Median Price = ((Low + High) / 2). <br/> AO = 5-Period SMA - 34-Period SMA.`,
+        description: `<h3>Awesome Oscillator (AO)</h3> <p>it is a momentum indicator developed by Bill Williams that measures market trends by calculating the difference between a 34-period and a 5-period simple moving average (SMA) of median prices (high + low)/2. It displays as a histogram, where positive values indicate bullish momentum, negative values indicate bearish, and color changes (green/red) suggest potential reversals or trend strength.
+<ul class="list-inside list-disc">
+  <li>Median Price = ((Low + High) / 2)</li>
+  <li>AO = 5-Period SMA - 34-Period SMA.</li>
+</ul></p>`,
         strategyName: 'awesomeOsc',
       },
       {
         name: 'CMO',
         fullName: 'chaikinOscillator',
-        description:
-          'The ChaikinOscillator function measures the momentum of the Accumulation/Distribution (A/D) using the Moving Average Convergence Divergence (MACD) formula. It takes the difference between fast and slow periods EMA of the A/D. Cross above the A/D line indicates bullish. <br/> CO = Ema(fastPeriod, AD) - Ema(slowPeriod, AD)',
+        description: `<h3>Chaikin Oscillator</h3> <p> It measures the momentum of the Accumulation/Distribution (A/D) using the Moving Average Convergence Divergence (MACD) formula. It takes the difference between fast and slow periods EMA of the A/D. Cross above the A/D line indicates bullish.
+<ul class="list-disc list-inside">
+  <li>CO = Ema(fastPeriod, AD) - Ema(slowPeriod, AD)</li>
+</ul></p>`,
       },
       {
         name: 'Ichimoku',
         fullName: 'ichimokuCloud',
-        description: `Ichimoku Cloud. Also known as Ichimoku Kinko Hyo, is a versatile indicator that defines support and resistence, identifies trend direction, gauges momentum, and provides trading signals. <br/>
-          Tenkan-sen (Conversion Line) = (9-Period High + 9-Period Low) / 2 <br/>
-          Kijun-sen (Base Line) = (26-Period High + 26-Period Low) / 2 <br/>
-          Senkou Span A (Leading Span A) = (Conversion Line + Base Line) / 2 projected 26 periods in the future <br/>
-          Senkou Span B (Leading Span B) = (52-Period High + 52-Period Low) / 2 projected 26 periods in the future <br/>
-          Chikou Span (Lagging Span) = Closing plotted 26 periods in the past.`,
+        description: `<h3>Ichimoku Cloud</h3> <p>Also known as Ichimoku Kinko Hyo, is a versatile indicator that defines support and resistence, identifies trend direction, gauges momentum, and provides trading signals.
+<ul class="list-inside list-disc">
+  <li>Tenkan-sen (Conversion Line) = (9-Period High + 9-Period Low) / 2</li>
+  <li>Kijun-sen (Base Line) = (26-Period High + 26-Period Low) / 2</li>
+  <li>Senkou Span A (Leading Span A) = (Conversion Line + Base Line) / 2 projected 26 periods in the future</li>
+  <li>Senkou Span B (Leading Span B) = (52-Period High + 52-Period Low) / 2 projected 26 periods in the future</li>
+  <li>Chikou Span (Lagging Span) = Closing plotted 26 periods in the past.</li>
+</ul></p>`,
         strategyName: 'Ichimoku',
       },
       {
         name: 'PPO',
         fullName: 'percentagePriceOscillator',
-        description: `Percentage Price Oscillator (PPO). It is a momentum oscillator for the price. It is used to indicate the ups and downs based on the price. A breakout is confirmed when PPO is positive. <br/>
-          PVO = ((EMA(fastPeriod, prices) - EMA(slowPeriod, prices)) / EMA(longPeriod, prices)) * 100, <br/>
-          Signal = EMA(9, PVO) <br/>
-          Histogram = PVO - Signal`,
+        description: `<h3>Percentage Price Oscillator (PPO)</h3> <p>It is a momentum oscillator for the price. It is used to indicate the ups and downs based on the price. A breakout is confirmed when PPO is positive.
+<ul class="list-inside list-disc">
+  <li>PVO = ((EMA(fastPeriod, prices) - EMA(slowPeriod, prices)) / EMA(longPeriod, prices)) * 100,</li>
+  <li>Signal = EMA(9, PVO)</li>
+  <li>Histogram = PVO - Signal</li>
+</ul></p>`,
       },
       {
         name: 'PVO',
         fullName: 'percentageVolumeOscillator',
-        description: `Percentage Volume Oscillator (PVO). It is a momentum oscillator for the volume. It is used to indicate the ups and downs based on the volume. A breakout is confirmed when PVO is positive. <br/>
-          PVO = ((EMA(fastPeriod, volumes) - EMA(slowPeriod, volumes)) / EMA(longPeriod, volumes)) * 100. <br/>
-          Signal = EMA(9, PVO), <br/>
-          Histogram = PVO - Signal`,
+        description: `<h3>Percentage Volume Oscillator (PVO)</h3> <p>It is a momentum oscillator for the volume. It is used to indicate the ups and downs based on the volume. A breakout is confirmed when PVO is positive.
+<ul class="list-insdie list-disc">
+  <li>PVO = ((EMA(fastPeriod, volumes) - EMA(slowPeriod, volumes)) / EMA(longPeriod, volumes)) * 100.</li>
+  <li>Signal = EMA(9, PVO),</li>
+  <li>Histogram = PVO - Signal</li>
+</ul></p>`,
       },
       {
         name: 'ROC',
         fullName: 'priceRateOfChange',
-        description: `Price Rate of Change (ROC). <br/>
-          ROC[i] = 0 when i < period,<br/>
-          ROC[i] = (close[i] / close[i-period] - 1) * 100 when i >= period`,
+        description: `<h3>Price Rate of Change (ROC)</h3><p>The Price Rate of Change (ROC) is a technical momentum oscillator that measures the percentage difference between the current price and the price (n) periods ago. It identifies trend speed, reversals, and overbought/oversold conditions, typically plotted around a zero line.
+<ul class="list-inside list-disc">
+  <li>ROC[i] = 0 when i < period,</li>>
+  <li>ROC[i] = (close[i] / close[i-period] - 1) * 100 when i >= period</li>
+</ul></p>`,
       },
       {
         name: 'RSI',
         fullName: 'relativeStrengthIndex',
-        description: `Relative Strength Index (RSI). <br/>
-          It is a momentum indicator that measures the magnitude of recent price changes to evaluate overbought and oversold conditions using the given window period.<br/>
-          RS = Average Gain / Average Loss, <br/>
-          RSI = 100 - (100 / (1 + RS))`,
+        description: `<h3>Relative Strength Index (RSI)</h3>
+        <p>It is a momentum indicator that measures the magnitude of recent price changes to evaluate overbought and oversold conditions using the given window period.
+<ul class="list-inside list-disc">
+  <li>RS = Average Gain / Average Loss,</li>
+  <li>RSI = 100 - (100 / (1 + RS))</li>
+</ul></p>`,
         strategyName: 'RSI2',
       },
       {
         name: 'Stoch',
         fullName: 'stochasticOscillator',
-        description: `Stochastic Oscillator. <br/>
-        It is a momentum indicator that shows the location of the closing relative to high-low range over a set number of periods.<br/>
-        K = (Closing - Lowest Low) / (Highest High - Lowest Low) * 100<br/>
-        D = 3-Period SMA of K`,
+        description: `<h3>Stochastic Oscillator</h3><p>It is a momentum indicator that shows the location of the closing relative to high-low range over a set number of periods.
+<ul class="list-insdie list-disc">
+  <li>K = (Closing - Lowest Low) / (Highest High - Lowest Low) * 100</li>
+  <li>D = 3-Period SMA of K</li>
+</ul></p>`,
         strategyName: 'Stoch',
       },
       {
         name: 'willR',
         fullName: 'williamsR',
-        description: `Williams R. Determine overbought and oversold.<br/>
-        WR = (Highest High - Closing) / (Highest High - Lowest Low) * -100.<br/>
-        Buy when -80 and below. Sell when -20 and above.`,
+        description: `<h3>Williams R</h3><p>The Williams %R indicator, created by Larry Williams, is a momentum-based oscillator ranging from (0) to (-100) that measures overbought and oversold levels by comparing the closing price to the high-low range over a set period (typically (14) days). Readings above (-20) indicate overbought conditions, while readings below (-80) suggest oversold conditions.
+<ul class="list-inside list-disc">
+  <li>WR = (Highest High - Closing) / (Highest High - Lowest Low) * -100.</li>
+</ul>
+Buy when -80 and below. Sell when -20 and above.</p>`,
         strategyName: 'willRS',
       },
     ],
@@ -279,55 +300,55 @@ export const IndicatorsItems: ItemsProps[] = [
       {
         name: 'APO',
         fullName: 'absolutePriceOscillator',
-        description: `Absolute Price Oscillator (APO) function calculates the technical indicator that is used to follow trends. APO crossing above zero indicates bullish, while crossing below zero indicates bearish. Positive value is upward trend, while negative value is downward trend.<br/>
-        Fast = EMA(fastPeriod, values)<br/>
-        Slow = EMA(slowPeriod, values)<br/>
-        APO = Fast - Slow`,
+        description: `<h3>Absolute Price Oscillator (APO)</h3> <p>It calculates the technical indicator that is used to follow trends. APO crossing above zero indicates bullish, while crossing below zero indicates bearish. Positive value is upward trend, while negative value is downward trend.<br>
+Fast = EMA(fastPeriod, values)</br>
+Slow = EMA(slowPeriod, values)</br>
+APO = Fast - Slow</p>`,
         strategyName: 'APO',
       },
       {
         name: 'Aroon',
         fullName: 'aroon',
-        description: `Aroon Indicator. It is a technical indicator that is used to identify trend changes in the price of a stock, as well as the strength of that trend. It consists of two lines, Arron Up, and Aroon Down. The Aroon Up line measures the strength of the uptrend, and the Aroon Down measures the strength of the downtrend. When Aroon Up is above Aroon Down, it indicates bullish price, and when Aroon Down is above Aroon Up, it indicates bearish price.<br/>
-        Aroon Up = ((25 - Period Since Last 25 Period High) / 25) * 100<br/>
-        Aroon Down = ((25 - Period Since Last 25 Period Low) / 25) * 100`,
+        description: `<h3>Aroon Indicator</h3> <p>It is a technical indicator that is used to identify trend changes in the price of a stock, as well as the strength of that trend. It consists of two lines, Arron Up, and Aroon Down. The Aroon Up line measures the strength of the uptrend, and the Aroon Down measures the strength of the downtrend. When Aroon Up is above Aroon Down, it indicates bullish price, and when Aroon Down is above Aroon Up, it indicates bearish price.<br>
+Aroon Up = ((25 - Period Since Last 25 Period High) / 25) * 100 <br>
+Aroon Down = ((25 - Period Since Last 25 Period Low) / 25) * 100</p>`,
         strategyName: `Aroon`,
       },
       {
         name: 'BOP',
         fullName: 'balanceOfPower',
-        description: `The Balance of Power (BOP) function calculates the strength of buying and selling pressure. Positive value indicates an upward trend, and negative value indicates a downward trend. Zero indicates a balance between the two.<br/>
-        BOP = (Closing - Opening) / (High - Low)`,
+        description: `<h3>Balance of Power (BOP)</h3> <p>It calculates the strength of buying and selling pressure. Positive value indicates an upward trend, and negative value indicates a downward trend. Zero indicates a balance between the two.<br>
+BOP = (Closing - Opening) / (High - Low)</p>`,
         strategyName: `BOP`,
       },
       {
         name: 'CFO',
         fullName: 'chandeForecastOscillator',
-        description: `The Chande Forecast Oscillator developed by Tushar Chande The Forecast Oscillator plots the percentage difference between the closing price and the n-period linear regression forecasted price. The oscillator is above zero when the forecast price is greater than the closing price and less than zero if it is below.<br/>
-        R = Linreg(Closing)<br/>
-        CFO = ((Closing - R) / Closing) * 100`,
+        description: `<h3>Chande Forecast Oscillator</h3><p>It was developed by Tushar Chande The Forecast Oscillator plots the percentage difference between the closing price and the n-period linear regression forecasted price. The oscillator is above zero when the forecast price is greater than the closing price and less than zero if it is below.<br>
+R = Linreg(Closing)<br>
+CFO = ((Closing - R) / Closing) * 100</p>`,
         strategyName: 'CFO',
       },
       {
         name: 'MCFO',
         fullName: 'movingChandeForecastOscillator',
-        description: `Moving Chande Forecast Oscillator calculates based on the given period. The Chande Forecast Oscillator developed by Tushar Chande The Forecast Oscillator plots the percentage difference between the closing price and the n-period linear regression forecasted price. The oscillator is above zero when the forecast price is greater than the closing price and less than zero if it is below.<br/>
-        R = Linreg(Closing)<br/>
-        CFO = ((Closing - R) / Closing) * 100`,
+        description: `<h3>Moving Chande Forecast Oscillator</h3><p>It calculates based on the given period. The Chande Forecast Oscillator developed by Tushar Chande The Forecast Oscillator plots the percentage difference between the closing price and the n-period linear regression forecasted price. The oscillator is above zero when the forecast price is greater than the closing price and less than zero if it is below.<br>
+R = Linreg(Closing)<br>
+CFO = ((Closing - R) / Closing) * 100</p>`,
       },
       {
         name: 'CCI',
         fullName: 'communityChangeIndex',
-        description: `The Community Channel Index (CCI) is a momentum-based oscillator used to help determine when an investment vehicle is reaching a condition of being overbought or oversold.<br/>
-        Moving Average = Sma(Period, Typical Price)<br/>
-        Mean Deviation = Sma(Period, Abs(Typical Price - Moving Average))<br/>
-        CMI = (Typical Price - Moving Average) / (0.015 * Mean Deviation)`,
+        description: `<h3>Community Channel Index (CCI)</h3><p> It is a momentum-based oscillator used to help determine when an investment vehicle is reaching a condition of being overbought or oversold.<br>
+Moving Average = Sma(Period, Typical Price)<br>
+Mean Deviation = Sma(Period, Abs(Typical Price - Moving Average))<br>
+CMI = (Typical Price - Moving Average) / (0.015 * Mean Deviation)</p>`,
       },
       {
         name: 'DEMA',
         fullName: 'doubleExponentialMovingAverage',
-        description: `Dema calculates the Double Exponential Moving Average (DEMA).<br/>
-        DEMA = (2 * EMA(values)) - EMA(EMA(values))`,
+        description: `Dema calculates the Double Exponential Moving Average (DEMA)/
+DEMA = (2 * EMA(values)) - EMA(EMA(values))`,
       },
       {
         name: 'EMA',
@@ -337,29 +358,29 @@ export const IndicatorsItems: ItemsProps[] = [
       {
         name: 'KDJ',
         fullName: 'randomIndex',
-        description: `The kdj function calculates the KDJ indicator, also known as the Random Index. KDJ is calculated similar to the Stochastic Oscillator with the difference of having the J line. It is used to analyze the trend and entry points.<br/>
-        The K and D lines show if the asset is overbought when they crosses above 80%, and oversold when they crosses below 20%. The J line represents the divergence.<br/>
-        RSV = ((Closing - Min(Low, rPeriod)) / (Max(High, rPeriod) - Min(Low, rPeriod))) * 100<br/>
-        K = Sma(RSV, kPeriod)<br/>
-        D = Sma(K, dPeriod)<br/>
-        J = (3 * K) - (2 * D)`,
+        description: `<h3>HDK</h3><p>The kdj function calculates the KDJ indicator, also known as the Random Index. KDJ is calculated similar to the Stochastic Oscillator with the difference of having the J line. It is used to analyze the trend and entry points.<br>
+The K and D lines show if the asset is overbought when they crosses above 80%, and oversold when they crosses below 20%. The J line represents the divergence.<br>
+RSV = ((Closing - Min(Low, rPeriod)) / (Max(High, rPeriod) - Min(Low, rPeriod))) * 100<br>
+K = Sma(RSV, kPeriod)<br>
+D = Sma(K, dPeriod)<br>
+J = (3 * K) - (2 * D)</p>`,
         strategyName: 'KDJ',
       },
       {
         name: 'MI',
         fullName: 'massIndex',
-        description: `The Mass Index (MI) uses the high-low range to identify trend reversals based on range expansions.<br/>
-        Singe EMA = EMA(9, Highs - Lows)<br/>
-        Double EMA = EMA(9, Single EMA)<br/>
-        Ratio = Single EMA / Double EMA<br/>
-        MI = Sum(25, Ratio)`,
+        description: `<h3>Mass Index (MI)</h3><p>It uses the high-low range to identify trend reversals based on range expansions.<br>
+Singe EMA = EMA(9, Highs - Lows)<br>
+Double EMA = EMA(9, Single EMA)<br>
+Ratio = Single EMA / Double EMA<br>
+MI = Sum(25, Ratio)</p>`,
       },
       {
         name: 'MACD',
         fullName: 'movingAverageConvergenceDivergence',
-        description: `Moving Average Convergence Divergence (MACD).<br/>
-        MACD = 12-Period EMA - 26-Period EMA.<br/>
-        Signal = 9-Period EMA of MACD.`,
+        description: `<h3>Moving Average Convergence Divergence (MACD)</h3><p>The Moving Average Convergence Divergence (MACD) is a popular trend-following momentum indicator used in technical analysis to measure the relationship between two exponential moving averages (EMAs) of a security’s price. It helps identify trend direction, strength, and potential entry/exit points by showing changes in momentum, typically calculated as the 12-period EMA minus the 26-period EMA.<br>
+MACD = 12-Period EMA - 26-Period EMA.<br>
+ Signal = 9-Period EMA of MACD.</p>`,
         strategyName: 'MACD',
       },
       {
@@ -380,32 +401,34 @@ export const IndicatorsItems: ItemsProps[] = [
       {
         name: 'PSAR',
         fullName: 'parabolicSAR',
-        description: `Parabolic SAR. It is a popular technical indicator for identifying the trend and as a trailing stop.<br/>
-        PSAR = PSAR[i - 1] - ((PSAR[i - 1] - EP) * AF)<br/>
-        If the trend is Falling:<br/>
-        - PSAR is the maximum of PSAR or the previous two high values.<br/>
-        - If the current high is greather than or equals to PSAR, use EP.<br/>
-        If the trend is Rising:<br/>
-        - PSAR is the minimum of PSAR or the previous two low values.<br/>
-        - If the current low is less than or equals to PSAR, use EP.<br/>
-        If PSAR is greater than the closing, trend is falling, and the EP is set to the minimum of EP or the low.<br/>
-        If PSAR is lower than or equals to the closing, trend is rising, and the EP is set to the maximum of EP or the high.<br/>
-        If the trend is the same, and AF is less than 0.20, increment it by 0.02.<br/>
-        If the trend is not the same, set AF to 0.02.`,
+        description: `<h3>Parabolic SAR</h3><p>It is a popular technical indicator for identifying the trend and as a trailing stop.<br>
+SAR = PSAR[i - 1] - ((PSAR[i - 1] - EP) * AF)<br>
+If the trend is Falling:<br>
+ - PSAR is the maximum of PSAR or the previous two high values.<br>
+ - If the current high is greather than or equals to PSAR, use EP.<br>
+If the trend is Rising:<br>
+ - PSAR is the minimum of PSAR or the previous two low values.<br>
+ - If the current low is less than or equals to PSAR, use EP.<br>
+If PSAR is greater than the closing, trend is falling, and the EP is set to the minimum of EP or the low.<br>
+If PSAR is lower than or equals to the closing, trend is rising, and the EP is set to the maximum of EP or the high.<br>
+If the trend is the same, and AF is less than 0.20, increment it by 0.02.<br>
+If the trend is not the same, set AF to 0.02.</p>`,
         strategyName: 'PSAR',
       },
       {
         name: 'QSTICK',
         fullName: 'QSTICK',
-        description: `The Qstick function calculates the ratio of recent up and down bars.<br/>
-        QS = Sma(Closing - Opening)`,
+        description: `The Qstick function calculates the ratio of recent up and down bars.
+
+QS = Sma(Closing - Opening)`,
       },
       {
         name: 'RMA',
         fullName: 'rollingMovingAverage',
-        description: `Rolling moving average (RMA).<br/>
-        R[0] to R[p-1] is SMA(values)<br/>
-        R[p] and after is R[i] = ((R[i-1]*(p-1)) + v[i]) / p`,
+        description: `Rolling moving average (RMA).
+
+R[0] to R[p-1] is SMA(values)
+R[p] and after is R[i] = ((R[i-1]*(p-1)) + v[i]) / p`,
       },
       {
         name: 'SMA',
@@ -438,56 +461,63 @@ export const IndicatorsItems: ItemsProps[] = [
       {
         name: 'AB',
         fullName: 'accelulationBands',
-        description: `The accelerationBands plots upper and lower envelope bands around a simple moving average.<br/>
-          Upper Band = SMA(High * (1 + 4 * (High - Low) / (High + Low)))<br/>
-          Middle Band = SMA(Closing)<br/>
-          Lower Band = SMA(Low * (1 + 4 * (High - Low) / (High + Low)))`,
+        description: `The accelerationBands plots upper and lower envelope bands around a simple moving average.
+
+Upper Band = SMA(High * (1 + 4 * (High - Low) / (High + Low)))
+Middle Band = SMA(Closing)
+Lower Band = SMA(Low * (1 + 4 * (High - Low) / (High + Low)))`,
         strategyName: 'AB',
       },
       {
         name: 'ATR',
         fullName: 'averageTrueRange',
-        description: `The atr function calculates a technical analysis indicator that measures market volatility by decomposing the entire range of stock prices for that period.<br/>
-        TR = Max((High - Low), (High - Closing), (Closing - Low))<br/>
-        ATR = 14-Period SMA TR`,
+        description: `The atr function calculates a technical analysis indicator that measures market volatility by decomposing the entire range of stock prices for that period.
+
+TR = Max((High - Low), (High - Closing), (Closing - Low))
+ATR = 14-Period SMA TR`,
       },
       {
         name: 'BB',
         fullName: 'Bollinger Bands',
-        description: `The bollingerBands function calculates the bollinger bands, middle band, upper band, lower band, provides identification of when a stock is oversold or overbought.<br/>
-        Middle Band = 20-Period SMA.<br/>
-        Upper Band = 20-Period SMA + 2 (20-Period Std)<br/>
-        Lower Band = 20-Period SMA - 2 (20-Period Std)`,
+        description: `The bollingerBands function calculates the bollinger bands, middle band, upper band, lower band, provides identification of when a stock is oversold or overbought.
+
+Middle Band = 20-Period SMA.
+Upper Band = 20-Period SMA + 2 (20-Period Std)
+Lower Band = 20-Period SMA - 2 (20-Period Std)`,
         strategyName: 'BB',
       },
       {
         name: 'BBW',
         fullName: 'Bollinger Bands Width',
-        description: `The bollingerBandsWidth function measures the percentage difference between the upper band and the lower band. It decreases as Bollinger Bands narrows and increases as Bollinger Bands widens. During a period of rising price volatility the band width widens, and during a period of low market volatility band width contracts.<br/>
-        Band Width = (Upper Band - Lower Band) / Middle Band`,
+        description: `The bollingerBandsWidth function measures the percentage difference between the upper band and the lower band. It decreases as Bollinger Bands narrows and increases as Bollinger Bands widens. During a period of rising price volatility the band width widens, and during a period of low market volatility band width contracts.
+
+Band Width = (Upper Band - Lower Band) / Middle Band`,
       },
       {
         name: 'CE',
         fullName: 'Chandelier Exit',
-        description: `The chandelierExit function sets a trailing stop-loss based on the Average True Value (ATR).<br/>
-        Chandelier Exit Long = 22-Period SMA High - ATR(22) * 3<br/>
-        Chandelier Exit Short = 22-Period SMA Low + ATR(22) * 3`,
+        description: `The chandelierExit function sets a trailing stop-loss based on the Average True Value (ATR).
+
+Chandelier Exit Long = 22-Period SMA High - ATR(22) * 3
+Chandelier Exit Short = 22-Period SMA Low + ATR(22) * 3`,
       },
       {
         name: 'DC',
         fullName: `Donchian Channel`,
-        description: `The donchianChannel calculates three lines generated by moving average calculations that comprise an indicator formed by upper and lower bands around a midrange or median band. The upper band marks the highest price of an asset while the lower band marks the lowest price of an asset, and the area between the upper and lower bands represents the Donchian Channel.<br/>
-        Upper Channel = Mmax(closings, { period })<br/>
-        Lower Channel = Mmin(closings, { period })<br/>
-        Middle Channel = (Upper Channel + Lower Channel) / 2`,
+        description: `The donchianChannel calculates three lines generated by moving average calculations that comprise an indicator formed by upper and lower bands around a midrange or median band. The upper band marks the highest price of an asset while the lower band marks the lowest price of an asset, and the area between the upper and lower bands represents the Donchian Channel.
+
+Upper Channel = Mmax(closings, { period })
+Lower Channel = Mmin(closings, { period })
+Middle Channel = (Upper Channel + Lower Channel) / 2`,
       },
       {
         name: 'KC',
         fullName: 'Keltner Channel',
-        description: `The keltnerChannel provides volatility-based bands that are placed on either side of an asset's price and can aid in determining the direction of a trend.<br/>
-        Middle Line = EMA(period, closings)<br/>
-        Upper Band = EMA(period, closings) + 2 * ATR(period, highs, lows, closings)<br/>
-        Lower Band = EMA(period, closings) - 2 * ATR(period, highs, lows, closings)`,
+        description: `The keltnerChannel provides volatility-based bands that are placed on either side of an asset's price and can aid in determining the direction of a trend.
+
+Middle Line = EMA(period, closings)
+Upper Band = EMA(period, closings) + 2 * ATR(period, highs, lows, closings)
+Lower Band = EMA(period, closings) - 2 * ATR(period, highs, lows, closings)`,
       },
       {
         name: 'MSTD',
@@ -497,27 +527,30 @@ export const IndicatorsItems: ItemsProps[] = [
       {
         name: 'PO',
         fullName: 'Projection Oscillator',
-        description: `The projectionOscillator calculates the Projection Oscillator (PO). The PO uses the linear regression slope, along with highs and lows.Period defines the moving window to calculates the PO, and the smooth period defines the moving windows to take EMA of PO.<br/>
-        PL = Min(period, (high + MLS(period, x, high)))<br/>
-        PU = Max(period, (low + MLS(period, x, low)))<br/>
-        PO = 100 * (Closing - PL) / (PU - PL)<br/>
-        SPO = EMA(smooth, PO)`,
+        description: `The projectionOscillator calculates the Projection Oscillator (PO). The PO uses the linear regression slope, along with highs and lows.Period defines the moving window to calculates the PO, and the smooth period defines the moving windows to take EMA of PO.
+
+PL = Min(period, (high + MLS(period, x, high)))
+PU = Max(period, (low + MLS(period, x, low)))
+PO = 100 * (Closing - PL) / (PU - PL)
+SPO = EMA(smooth, PO)`,
         strategyName: 'PO',
       },
       {
         name: 'TR',
         fullName: 'True Range',
-        description: `The trueRange function calculates the True Range (TR) for a given period.<br/>
-        TR = Max((High - Low), Abs(High - Closing[-1]), Abs(Low - Closing[-1]))`,
+        description: `The trueRange function calculates the True Range (TR) for a given period.
+
+TR = Max((High - Low), Abs(High - Closing[-1]), Abs(Low - Closing[-1]))`,
       },
       {
         name: 'UI',
         fullName: 'Ulcer Index',
-        description: `The ulcerIndex measures downside risk. The index increases in value as the price moves farther away from a recent high and falls as the price rises to new highs.<br/>
-        High Closings = Max(period, Closings)<br/>
-        Percentage Drawdown = 100 * ((Closings - High Closings) / High Closings)<br/>
-        Squared Average = Sma(period, Percent Drawdown * Percent Drawdown)<br/>
-        Ulcer Index = Sqrt(Squared Average)`,
+        description: `The ulcerIndex measures downside risk. The index increases in value as the price moves farther away from a recent high and falls as the price rises to new highs.
+
+High Closings = Max(period, Closings)
+Percentage Drawdown = 100 * ((Closings - High Closings) / High Closings)
+Squared Average = Sma(period, Percent Drawdown * Percent Drawdown)
+Ulcer Index = Sqrt(Squared Average)`,
       },
     ],
   },
@@ -527,75 +560,84 @@ export const IndicatorsItems: ItemsProps[] = [
       {
         name: 'A/D',
         fullName: 'accumulationDistribution',
-        description: `The accumulationDistribution is a cumulative indicator that uses volume and price to assess whether a stock is being accumulated or distributed. The Accumulation/Distribution seeks to identify divergences between the stock price and the volume flow.<br/>
-        MFM = ((Closing - Low) - (High - Closing)) / (High - Low)<br/>
-        MFV = MFM * Period Volume<br/>
-        AD = Previous AD + CMFV`,
+        description: `The accumulationDistribution is a cumulative indicator that uses volume and price to assess whether a stock is being accumulated or distributed. The Accumulation/Distribution seeks to identify divergences between the stock price and the volume flow.
+
+MFM = ((Closing - Low) - (High - Closing)) / (High - Low)
+MFV = MFM * Period Volume
+AD = Previous AD + CMFV`,
       },
       {
         name: 'CMF',
         fullName: 'Chaikin Money Flow',
-        description: `The chaikinMoneyFlow measures the amount of money flow volume over a given period.<br/>
-        Money Flow Multiplier = ((Closing - Low) - (High - Closing)) / (High - Low)<br/>
-        Money Flow Volume = Money Flow Multiplier * Volume<br/>
-        Chaikin Money Flow = Sum(20, Money Flow Volume) / Sum(20, Volume)`,
+        description: `The chaikinMoneyFlow measures the amount of money flow volume over a given period.
+
+Money Flow Multiplier = ((Closing - Low) - (High - Closing)) / (High - Low)
+Money Flow Volume = Money Flow Multiplier * Volume
+Chaikin Money Flow = Sum(20, Money Flow Volume) / Sum(20, Volume)`,
         strategyName: 'CMF',
       },
       {
         name: 'EMV',
         fullName: 'Ease of Movement',
-        description: `The easeOfMovement is a volume based oscillator measuring the ease of price movement.<br/>
-        Distance Moved = ((High + Low) / 2) - ((Priod High + Prior Low) /2)<br/>
-        Box Ratio = ((Volume / 100000000) / (High - Low))<br/>
-        EMV(1) = Distance Moved / Box Ratio<br/>
-        EMV(14) = SMA(14, EMV(1))`,
+        description: `The easeOfMovement is a volume based oscillator measuring the ease of price movement.
+
+Distance Moved = ((High + Low) / 2) - ((Priod High + Prior Low) /2)
+Box Ratio = ((Volume / 100000000) / (High - Low))
+EMV(1) = Distance Moved / Box Ratio
+EMV(14) = SMA(14, EMV(1))`,
         strategyName: 'EMV',
       },
       {
         name: 'FI',
         fullName: 'ForceIndex',
-        description: `The forceIndex uses the closing price and the volume to assess the power behind a move and identify turning points.<br/>
-          Force Index = EMA(period, (Current - Previous) * Volume)`,
+        description: `The forceIndex uses the closing price and the volume to assess the power behind a move and identify turning points.
+
+Force Index = EMA(period, (Current - Previous) * Volume)`,
         strategyName: 'FI',
       },
       {
         name: 'MFI',
         fullName: 'MoneyFlowIndex',
-        description: `The moneyFlowIndex function analyzes both the closing price and the volume to measure to identify overbought and oversold states. It is similar to the Relative Strength Index (RSI), but it also uses the volume.<br/>
-        Raw Money Flow = Typical Price * Volume<br/>
-        Money Ratio = Positive Money Flow / Negative Money Flow<br/>
-        Money Flow Index = 100 - (100 / (1 + Money Ratio))`,
+        description: `The moneyFlowIndex function analyzes both the closing price and the volume to measure to identify overbought and oversold states. It is similar to the Relative Strength Index (RSI), but it also uses the volume.
+
+Raw Money Flow = Typical Price * Volume
+Money Ratio = Positive Money Flow / Negative Money Flow
+Money Flow Index = 100 - (100 / (1 + Money Ratio))`,
         strategyName: 'MFI',
       },
       {
         name: 'NVI',
         fullName: 'NegativeVolumeIndex',
-        description: `The negativeVolumeIndex function calculates a cumulative indicator using the change in volume to decide when the smart money is active.<br/>
-        If Volume is greather than Previous Volume: <br/>
-        NVI = Previous NVI<br/>
-        Otherwise: <br/>
-        NVI = Previous NVI + (((Closing - Previous Closing) / Previous Closing) * Previous NVI)`,
+        description: `The negativeVolumeIndex function calculates a cumulative indicator using the change in volume to decide when the smart money is active.
+
+If Volume is greather than Previous Volume:
+NVI = Previous NVI
+Otherwise:
+NVI = Previous NVI + (((Closing - Previous Closing) / Previous Closing) * Previous NVI)`,
         strategyName: 'NVI',
       },
       {
         name: 'OBV',
         fullName: 'On-Balance Volume',
-        description: `The onBalanceVolume function calculates a technical trading momentum indicator that uses volume flow to predict changes in stock price.<br/>
-        OBV = OBV - volume, if Closing > Closing-Prev<br/>
-        OBV = OBV - Prev + 0, if Closing = Closing-Prev<br/>
-        OBV = OBV - volume, if Closing < Closing-Prev`,
+        description: `The onBalanceVolume function calculates a technical trading momentum indicator that uses volume flow to predict changes in stock price.
+
+OBV = OBV - volume, if Closing > Closing-Prev
+OBV = OBV - Prev + 0, if Closing = Closing-Prev
+OBV = OBV - volume, if Closing < Closing-Prev`,
       },
       {
         name: 'VPT',
         fullName: 'VolumePriceTrend',
-        description: `The volumePriceTrend provides a correlation between the volume and the price.<br/>
-        VPT = Previous VPT + (Volume * (Current Closing - Previous Closing) / Previous Closing)`,
+        description: `The volumePriceTrend provides a correlation between the volume and the price.
+
+VPT = Previous VPT + (Volume * (Current Closing - Previous Closing) / Previous Closing)`,
       },
       {
         name: 'VWAP',
         fullName: 'VolumeWeightedAveragePrice',
-        description: `The volumeWeightedAveragePrice provides the average price the asset has traded.<br/>
-        VWAP = Sum(Closing * Volume) / Sum(Volume)`,
+        description: `The volumeWeightedAveragePrice provides the average price the asset has traded.
+
+VWAP = Sum(Closing * Volume) / Sum(Volume)`,
         strategyName: 'VWAP',
       },
     ],
