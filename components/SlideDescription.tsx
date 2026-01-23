@@ -2,18 +2,26 @@
 
 import * as d3 from 'd3'
 import DOMPurify from 'dompurify'
+import emitter from '@/components/Emitter'
 import { Dialog, Transition } from '@headlessui/react'
 import { disableBodyScroll, enableBodyScroll, clearAllBodyScrollLocks } from 'body-scroll-lock'
 import { Fragment, useState, useEffect, useRef } from 'react'
-
-export function SlideStrategy() {
+/**
+ *
+ */
+function SlideStrategy() {
   const [navShow, setNavShow] = useState(false)
-  const [dataTitle, setDataTitle] = useState('Volume')
-  const [dataContent, setDataContent] = useState(
-    `Stock trading volume is the total number of shares, contracts, or units of a security traded between buyers and sellers during a specific period, typically a single trading day.`
-  )
+  const [dataTitle, setDataTitle] = useState('RSI2')
+  const [dataContent, setDataContent] = useState(`<h3>Relative Strength Index (RSI)</h3>
+        <p>It is a momentum indicator that measures the magnitude of recent price changes to evaluate overbought and oversold conditions using the given window period.
+<ul class="list-inside list-disc">
+  <li>RS = Average Gain / Average Loss,</li>
+  <li>RSI = 100 - (100 / (1 + RS))</li>
+</ul></p>`)
   const navRef = useRef(null)
-
+  /**
+   *
+   */
   const onToggleNav = () => {
     const M = d3.selectAll('main').select('#chart').select('#marquee')
     const Dc = M.attr('data-strategy')
@@ -34,13 +42,41 @@ export function SlideStrategy() {
       return !status
     })
   }
-
+  /**
+   *
+   */
+  const showNav = () => {
+    const M = d3.selectAll('main').select('#chart').select('#marquee')
+    const Dc = M.attr('data-description')
+    const fullname = M.attr('data-fullname')
+    disableBodyScroll(navRef.current)
+    setNavShow(true)
+    if (Dc.length > 0) {
+      setDataTitle(fullname)
+      const safeHTML = DOMPurify.sanitize(Dc)
+      setDataContent(safeHTML)
+    }
+  }
+  /**
+   * await main menu select
+   */
+  emitter.on('StrategiesInfoMsg', (data) => {
+    setTimeout(() => {
+      showNav()
+    }, 100)
+  })
+  /**
+   *
+   */
   useEffect(() => {
     return clearAllBodyScrollLocks
   })
+  /**
+   *
+   */
   return (
     <>
-      <span id="SlideDescription" className="md:hidden">
+      <span id="SlideDescriptionStrategy" className="hidden">
         <button aria-label="Toggle Menu" onClick={onToggleNav} className="sm:hidden">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -51,7 +87,7 @@ export function SlideStrategy() {
             <path
               fillRule="evenodd"
               clipRule="evenodd"
-              d="M15.28 9.47a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 1 1-1.06-1.06L13.69 10 9.97 6.28a.75.75 0 0 1 1.06-1.06l4.25 4.25ZM6.03 5.22l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.475 0 0 1-1.06-1.06L8.69 10 4.97 6.28a.75.75 0 0 1 1.06-1.06Z"
+              d="M4.72 9.47a.75.75 0 0 0 0 1.06l4.25 4.25a.75.75 0 1 0 1.06-1.06L6.31 10l3.72-3.72a.75.75 0 1 0-1.06-1.06L4.72 9.47Zm9.25-4.25L9.72 9.47a.75.75 0 0 0 0 1.06l4.25 4.25a.75.75 0 1 0 1.06-1.06L11.31 10l3.72-3.72a.75.75 0 0 0-1.06-1.06Z"
             />
           </svg>
         </button>
@@ -113,14 +149,19 @@ export function SlideStrategy() {
     </>
   )
 }
-export function SlideIndicator() {
+/**
+ *
+ */
+function SlideIndicator() {
   const [navShow, setNavShow] = useState(false)
   const [dataTitle, setDataTitle] = useState('Volume')
   const [dataContent, setDataContent] = useState(
     `Stock trading volume is the total number of shares, contracts, or units of a security traded between buyers and sellers during a specific period, typically a single trading day.`
   )
   const navRef = useRef(null)
-
+  /**
+   *
+   */
   const onToggleNav = () => {
     const M = d3.selectAll('main').select('#chart').select('#marquee')
     const Dc = M.attr('data-description')
@@ -138,16 +179,45 @@ export function SlideIndicator() {
           setDataContent(safeHTML)
         }
       }
+      console.log('onToggleNav', !status)
       return !status
     })
   }
-
+  /**
+   *
+   */
+  const showNav = () => {
+    const M = d3.selectAll('main').select('#chart').select('#marquee')
+    const Dc = M.attr('data-description')
+    const fullname = M.attr('data-fullname')
+    disableBodyScroll(navRef.current)
+    setNavShow(true)
+    if (Dc.length > 0) {
+      setDataTitle(fullname)
+      const safeHTML = DOMPurify.sanitize(Dc)
+      setDataContent(safeHTML)
+    }
+  }
+  /**
+   * await main menu select
+   */
+  emitter.on('IndicatorsInfoMsg', (data) => {
+    setTimeout(() => {
+      showNav()
+    }, 100)
+  })
+  /**
+   *
+   */
   useEffect(() => {
     return clearAllBodyScrollLocks
   })
+  /**
+   *
+   */
   return (
     <>
-      <span id="SlideDescription" className="md:hidden">
+      <span id="SlideDescriptionIndicator" className="hidden">
         <button aria-label="Toggle Menu" onClick={onToggleNav} className="sm:hidden">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -180,11 +250,11 @@ export function SlideIndicator() {
             <Transition.Child
               as={Fragment}
               enter="transition ease-in-out duration-300 transform"
-              enterFrom="translate-x-0 opacity-0"
-              enterTo="translate-x-full opacity-95"
+              enterFrom="translate-x-full opacity-0"
+              enterTo="translate-x-0 opacity-95"
               leave="transition ease-in duration-200 transform"
-              leaveFrom="translate-x-full opacity-95"
-              leaveTo="translate-x-0 opacity-0"
+              leaveFrom="translate-x-0 opacity-95"
+              leaveTo="translate-x-full opacity-0"
               unmount={false}
             >
               <Dialog.Panel className="fixed left-0 top-0 z-70 h-full w-full bg-white opacity-95 duration-300 dark:bg-gray-950 dark:opacity-[0.98]">

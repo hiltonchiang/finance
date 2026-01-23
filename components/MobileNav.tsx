@@ -1,10 +1,12 @@
 'use client'
 
-import { Dialog, Transition } from '@headlessui/react'
-import { disableBodyScroll, enableBodyScroll, clearAllBodyScrollLocks } from 'body-scroll-lock'
-import { Fragment, useState, useEffect, useRef } from 'react'
 import Link from './Link'
+import emitter from '@/components/Emitter'
 import headerNavLinks from '@/data/headerNavLinks'
+import { Dialog, Transition } from '@headlessui/react'
+import { menuItemClass } from '@/components/FinanceConstants'
+import { Fragment, useState, useEffect, useRef } from 'react'
+import { disableBodyScroll, enableBodyScroll, clearAllBodyScrollLocks } from 'body-scroll-lock'
 
 const MobileNav = () => {
   const [navShow, setNavShow] = useState(false)
@@ -21,11 +23,39 @@ const MobileNav = () => {
       return !status
     })
   }
-
+  /**
+   *
+   */
+  const handleClicked = (item) => {
+    onToggleNav()
+    switch (item) {
+      case 'IndicatorsInfo':
+        emitter.emit('IndicatorsInfoMsg', { timestamp: Date.now() })
+        console.log('MobileNav emit IndicatorsInfoMsg')
+        break
+      case 'StrategiesInfo':
+        emitter.emit('StrategiesInfoMsg', { timestamp: Date.now() })
+        break
+      case 'DayRanges':
+        emitter.emit('DayRangesMsg', { timestamp: Date.now() })
+        break
+      case 'SelectStrategies':
+        emitter.emit('SelectStrategiesMsg', { timestamp: Date.now() })
+        break
+      case 'SelectIndicators':
+        emitter.emit('SelectIndicatorsMsg', { timestamp: Date.now() })
+        break
+    }
+  }
+  /**
+   *
+   */
   useEffect(() => {
     return clearAllBodyScrollLocks
   })
-
+  /**
+   *
+   */
   return (
     <>
       <button aria-label="Toggle Menu" onClick={onToggleNav} className="sm:hidden">
@@ -72,19 +102,30 @@ const MobileNav = () => {
                 ref={navRef}
                 className="mt-8 flex h-full basis-0 flex-col items-start overflow-y-auto pl-12 pt-2 text-left"
               >
-                {headerNavLinks.map((link) => (
-                  <Link
-                    key={link.title}
-                    href={link.href}
-                    className="mb-4 inline-flex py-2 pr-4 text-2xl font-bold tracking-widest text-gray-900 outline outline-0 hover:text-primary-500 dark:text-gray-100 dark:hover:text-primary-400"
-                    onClick={onToggleNav}
+                <div className="flex flex-col space-y-1">
+                  <button className={menuItemClass} onClick={() => handleClicked('IndicatorsInfo')}>
+                    Indicators Info
+                  </button>
+                  <button className={menuItemClass} onClick={() => handleClicked('StrategiesInfo')}>
+                    Strategies Info
+                  </button>
+                  <button className={menuItemClass} onClick={() => handleClicked('DayRanges')}>
+                    Day Ranges
+                  </button>
+                  <button
+                    className={menuItemClass}
+                    onClick={() => handleClicked('SelectIndicators')}
                   >
-                    {link.icon}
-                    <span className="-translate-y-1.5">{link.title}</span>
-                  </Link>
-                ))}
+                    Select Indicators
+                  </button>
+                  <button
+                    className={menuItemClass}
+                    onClick={() => handleClicked('SelectStrategies')}
+                  >
+                    Select Strageties
+                  </button>
+                </div>
               </nav>
-
               <button
                 className="fixed right-4 top-7 z-80 h-16 w-16 p-4 text-gray-900 hover:text-primary-500 dark:text-gray-100 dark:hover:text-primary-400"
                 aria-label="Toggle Menu"

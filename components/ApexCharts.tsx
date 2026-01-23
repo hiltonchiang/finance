@@ -526,7 +526,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
       background: resolvedTheme === 'dark' ? '#121212' : '#F8F8F8',
       events: {
         mounted: (chartContext) => {
-          console.log('Chart Mounted, seriesLine/Line2', seriesLine)
+          console.log('Chart Mounted, chartContext', chartContext)
           // Capture the context on mount
           chartRef.current = chartContext
         },
@@ -1110,6 +1110,10 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
                   type: 'datetime',
                   labels: {
                     datetimeUTC: false, // Set to false to use local time zone
+                    //formatter: function (val) {
+                    //  console.log('formatter', val)
+                    //  return val
+                    //},
                   },
                   categories: D1.map((t) => t.x.toISOString()),
                 },

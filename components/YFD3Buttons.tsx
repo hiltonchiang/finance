@@ -127,7 +127,7 @@ async function handleButton1D(indicatorId, name, callback, strategyId?) {
   const Quotes: ChartResultArrayQuote[] = [] as ChartResultArrayQuote[]
   const O: YFProps = { symbol: name, options: queryOptions }
   const results = await updateButton(O)
-  // console.log('handleButton1D replied results', results)
+  console.log('handleButton1D replied results', results)
   if (results !== null) {
     for (let j = 0; j < results.quotes.length; j++) {
       if (results.quotes[j].volume !== 0) Quotes.push(results.quotes[j])
@@ -175,18 +175,31 @@ async function handleButton5D(indicatorId, name, callback, strategyId?) {
     if (results !== null) {
       for (let j = 0; j < results.quotes.length; j++) {
         if (results.quotes[j].volume !== 0) Quotes.push(results.quotes[j])
-        // Quotes.push(results.quotes[j])
       }
     }
     if (i == 0) {
       const startDate = fiveDays[4]
       const dt = Math.trunc((5 * 24 * 60) / Quotes.length)
-      // console.log('5D', startDate, Quotes.length, dt)
+      //let preTime = new Date(Quotes[0].date).getTime()
+      //const gaps: number[] = [] as number[]
       for (let i = 0; i < Quotes.length; i++) {
+        //const t = new Date(Quotes[i].date).getTime()
+        //if (t - preTime > 60 * 60 * 1000 * 12) gaps.push(i)
+        //preTime = t
         Quotes[i].date = new Date(startDate.getTime() - 13 * 60 * 60 * 1000 + i * dt * 60 * 1000)
-        // console.log('5D quotes', Quotes[i].date, Quotes[i].close)
       }
-      // console.log('handleButton5D Quotes', Quotes)
+      /*
+      console.log('5D gaps', gaps)
+      for (let j = 0; j < gaps.length; j++) {
+        const l = gaps[j]
+        if (l > 0) {
+          const t = new Date(Quotes[l + j - 1].date.getTime() + 15 * 60 * 1000)
+          const v = {...Quotes[l - 1]}
+          v.date = new Date(t)
+          v.close = null
+          Quotes.splice(l, 0, v)
+        }
+      }*/
       if (results !== null) {
         const O = Quotes[0].open
         const C = Quotes[Quotes.length - 1].close
@@ -772,12 +785,12 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
     }
   }
   useEffect(() => {
-    console.log('YFD3Button b4 emitter.on')
+    console.log('YFD3Button useEffect IN quotesButton', quotesButton)
     /**
      *
      */
     const showCoreData = (indicatorId, name, callback) => {
-      console.log('showCoreData, name', name)
+      console.log('showCoreData, name, quotesButton', name, quotesButton)
       const isMobile = window.matchMedia('(max-width: 768px)').matches
       const coredata = d3.select('#yahooFinance').select('#CoreData')
       const today = new Date()
@@ -848,9 +861,15 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
         coredata.html(`<span>US Market is closed.</span>${spanTag}`)
       }
     }
+    /**
+     *
+     */
     emitter.on('setTheme', (data) => {
       router.refresh()
     })
+    /**
+     *
+     */
     emitter.on('searchTicker', (data) => {
       console.log('Event "searchTicker" emitted with data:', data)
       nameRef.current = data.ticker[0]
@@ -904,14 +923,65 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
       }
       handleButton1D('VOL', data.ticker[0], onButtonClicked)
     })
+    /**
+     *
+     */
+    emitter.on('SlideMenuMsg', (data) => {
+      console.log('emitter.on SlideMenuMsg', data)
+      const min = d3.select('body').select('#MenuItemName')
+      switch (data.menu) {
+        case 'Quotes':
+          {
+            const item = data.item
+            const Q = min.select('#Quotes')
+            Q.html(item.name)
+            setQuotesButton(item.name)
+            QuotesItems.forEach((Q) => {
+              Q.items.forEach((I) => {
+                if (I.name == item.name) {
+                  if (I.action1) I.action1(indicatorsButton, nameRef.current, onButtonClicked)
+                }
+              })
+            })
+            router.refresh()
+          }
+          break
+        case 'Indicators':
+          {
+            const item = data.item
+            const I = min.select('#Indicators')
+            const S = min.select('#Strategies')
+            I.html(item.name)
+            setIndicatorsButton(item.name)
+            IndicatorsItems.forEach((I) => {
+              I.items.forEach((d) => {
+                if (d.name == item.name) {
+                  const strategyName = d.strategyName ?? null
+                  if (strategyName) {
+                    setStrategiesButton(strategyName)
+                    if (S !== null) S.html(strategyName)
+                  }
+                  showMarquee(d.fullName, d.description)
+                  if (d.action2) d.action2(d.name, quotesButton, nameRef.current, onButtonClicked)
+                }
+              })
+            })
+            router.refresh()
+          }
+
+          break
+        case 'Strategies':
+          break
+      }
+    })
     if (Date.now() - coreDataRef.current > 2 * 1000) {
       showCoreData(indicatorsButton, nameRef.current, onButtonClicked)
       coreDataRef.current = Date.now()
     }
     const oneMTimeout = setInterval(() => {
-      console.log('TimeOut')
+      console.log('TimeOut, quotesButton', quotesButton)
       if (Date.now() - timeoutRef.current > 59 * 1000) {
-        showCoreData(indicatorClicked, nameRef.current, onButtonClicked)
+        showCoreData(indicatorsButton, nameRef.current, onButtonClicked)
         timeoutRef.current = Date.now()
       }
     }, 60 * 1000)

@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import dynamic from 'next/dynamic'
 import YahooFinance from 'yahoo-finance2'
+import SlideMenu from '@/components/SlideMenu'
 import CandlestickChart from '@/components/ApexCharts'
 import useWindowDimensions from '@/components/WindowDimension'
 import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip'
@@ -288,12 +289,13 @@ const YF = async ({ symbol, options }: YFProps) => {
               RSI2
             </span>
           </div>
-          <div id="MenuItems" className="grid grid-cols-3 gap-4">
-            {/*<RangeButtons /> */}
-            {/*<IndicatorButtons /> */}
+          <div id="MenuItems" className="hidden md:grid md:grid-cols-3 md:gap-4">
             <QuotesDropDown />
             <IndicatorsDropDown />
             <StrategiesDropDown />
+          </div>
+          <div id="SlideMenuItems" className="grid hidden grid-cols-3 gap-4">
+            <SlideMenu />
           </div>
           <div id="CoreData" className="flex items-center justify-between text-sm md:text-base">
             Core Data

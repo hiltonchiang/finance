@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 export interface ItemProps {
   name: string
+  idx?: number
   fullName?: string
   description?: string
   indicatorName?: string
@@ -688,18 +689,18 @@ export const menuItemsClsStrategies = clsx(
 )
 export const menuItemClass = clsx(
   `flex-shrink-0 snap-center rounded-md px-4 py-2`,
-  `font-bold text-left md:text-center text-xs text-white`,
+  `font-bold text-left md:text-center text-sm text-white`,
   `w-[fit-content(100%)]`,
-  `bg-blue-500`,
+  `bg-blue-500 hover:bg-blue-700`,
   `md:text-base md:bg-blue-500 md:text-white md:hover:bg-blue-700`
 )
 
 export const menuItemClassHighlight = clsx(
   `flex-shrink-0 snap-center rounded-md px-4 py-2`,
-  `font-bold text-left md:text-center text-xs text-white`,
+  `font-bold text-left md:text-center text-sm text-white`,
   `border border-2 border-white p-2`,
   `w-[fit-content(100%)]`,
-  `bg-blue-500`,
+  `bg-blue-500 hover:bg-blue-700`,
   `md:text-base md:bg-blue-500 md:text-white md:hover:bg-blue-700`
 )
 
