@@ -822,9 +822,9 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
         weekday: dynamicWeekdayValue as 'long' | 'short' | 'narrow',
       }
       const easternDay = new Date().toLocaleDateString('en-US', options)
-      console.log('easternDay', easternDay)
+      console.log('est Day', easternDay)
       usToday = ': ' + easternDay + ', ' + usToday + ', est.'
-      const spanTag = `<span className="opacity-0 md:opacity-100">US Now ${usToday}</span>`
+      const spanTag = isMobile ? `` : `<span>US Now ${usToday}</span>`
       if (easternDay === 'Sunday') {
         coredata.html(`<span>US Market is closed on Sunday.</span>${spanTag}`)
         return
