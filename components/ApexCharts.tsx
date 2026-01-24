@@ -56,6 +56,7 @@ import {
   PointAnnotationsMarker,
   XAxisAnnotations,
 } from '@/components/FinanceConstants'
+import DateTime from 'apexcharts/src/utils/DateTime.js'
 /**
  *
  */

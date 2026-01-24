@@ -26,6 +26,7 @@ export interface ButtonClickedProps {
   id: string
   result: CandlestickChartProps
   strategyId?: string
+  button?: string
 }
 const TooltipCls =
   ' max-w-[150px] md:max-w-[300px] bg-stone-900 -translate-x-6 translate-y-4 text-base text-stone-300 dark:text-lime-300 border-2 border-blue-500 p-4'
@@ -92,7 +93,7 @@ const showInterDiff = (open, close, text) => {
     D2.html(open.toFixed(2))
   }
   const D3 = d3.selectAll('main').select('#quoteCompare').select('#quote')
-  if (D3) {
+  if (D3 && close) {
     D3.html(close.toFixed(2))
   }
   const D4 = d3.selectAll('main').select('#quoteCompare').select('#diff')
@@ -537,6 +538,7 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
   const [quotesButton, setQuotesButton] = useState('1 D')
   const [indicatorsButton, setIndicatorsButton] = useState('VOL')
   const [strategiesButton, setStrategiesButton] = useState('RSI2')
+  const [timeoutId, setTimeoutId] = useState<{ id: number }>({ id: -1 })
   const timeoutRef = useRef<number>(Date.now())
   const coreDataRef = useRef<number>(0)
   const nameRef = useRef<string>('SOXL')
@@ -978,14 +980,23 @@ const YFD3Buttons: React.FC<YFD3ButtonsProps> = ({ onButtonClicked }) => {
       showCoreData(indicatorsButton, nameRef.current, onButtonClicked)
       coreDataRef.current = Date.now()
     }
-    const oneMTimeout = setInterval(() => {
-      console.log('TimeOut, quotesButton', quotesButton)
-      if (Date.now() - timeoutRef.current > 59 * 1000) {
-        showCoreData(indicatorsButton, nameRef.current, onButtonClicked)
-        timeoutRef.current = Date.now()
-      }
-    }, 60 * 1000)
-  }, [nameRef, nodes, onButtonClicked]) // The empty depen
+    const oneMTimeout = () => {
+      console.log('oneMTimeout IN')
+      const id = setTimeout(function () {
+        console.log('TimeOut, quotesButton', quotesButton)
+        if (Date.now() - timeoutRef.current > 59 * 1000) {
+          showCoreData(indicatorsButton, nameRef.current, onButtonClicked)
+          timeoutRef.current = Date.now()
+        }
+        oneMTimeout()
+      }, 60 * 1000) as unknown as number
+      timeoutId.id = id
+    }
+    console.log('timeoutId', timeoutId)
+    if (timeoutId.id > 0) clearTimeout(timeoutId.id)
+    oneMTimeout()
+  }, [nameRef, nodes, onButtonClicked])
+  console.log('YFD3Buttons Leave!!')
   return <></>
 }
 export default YFD3Buttons
