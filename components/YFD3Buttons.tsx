@@ -173,6 +173,7 @@ async function handleButton5D(indicatorId, name, callback, strategyId?) {
     }
     const O: YFProps = { symbol: name, options: queryOptions }
     const results: ChartResultArray = (await updateButton(O)) as ChartResultArray
+    // console.log('handleButton5D results', i, results)
     if (results !== null) {
       for (let j = 0; j < results.quotes.length; j++) {
         if (results.quotes[j].volume !== 0) Quotes.push(results.quotes[j])
@@ -181,33 +182,17 @@ async function handleButton5D(indicatorId, name, callback, strategyId?) {
     if (i == 0) {
       const startDate = fiveDays[4]
       const dt = Math.trunc((5 * 24 * 60) / Quotes.length)
-      //let preTime = new Date(Quotes[0].date).getTime()
-      //const gaps: number[] = [] as number[]
       for (let i = 0; i < Quotes.length; i++) {
-        //const t = new Date(Quotes[i].date).getTime()
-        //if (t - preTime > 60 * 60 * 1000 * 12) gaps.push(i)
-        //preTime = t
+        // fake continues time series
         Quotes[i].date = new Date(startDate.getTime() - 13 * 60 * 60 * 1000 + i * dt * 60 * 1000)
       }
-      /*
-      console.log('5D gaps', gaps)
-      for (let j = 0; j < gaps.length; j++) {
-        const l = gaps[j]
-        if (l > 0) {
-          const t = new Date(Quotes[l + j - 1].date.getTime() + 15 * 60 * 1000)
-          const v = {...Quotes[l - 1]}
-          v.date = new Date(t)
-          v.close = null
-          Quotes.splice(l, 0, v)
-        }
-      }*/
-      if (results !== null) {
+      if (results !== null && Quotes.length > 0) {
         const O = Quotes[0].open
         const C = Quotes[Quotes.length - 1].close
         showInterDiff(O, C, 'In 5D')
         results.quotes = Quotes
         const R: CandlestickChartProps = { title: name, D: results }
-        const B: ButtonClickedProps = { id: indicatorId, result: R }
+        const B: ButtonClickedProps = { id: indicatorId, result: R, button: '5 D' }
         callback(B)
       }
     }

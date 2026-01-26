@@ -1,7 +1,7 @@
 'use client'
 import dynamic from 'next/dynamic'
 import { useTheme } from 'next-themes'
-import { ApexOptions } from 'apexcharts'
+import ApexCharts, { ApexOptions } from 'apexcharts'
 import YahooFinance from 'yahoo-finance2'
 import emitter from '@/components/Emitter'
 import React, { useState, useEffect, useRef } from 'react'
@@ -52,11 +52,14 @@ import {
   AnnotationLabel,
   ApexAxisChartSeries,
   ApexYAxis,
+  ApexXAxis,
   PointAnnotations,
   PointAnnotationsMarker,
   XAxisAnnotations,
 } from '@/components/FinanceConstants'
 import DateTime from 'apexcharts/src/utils/DateTime.js'
+import Core from 'apexcharts/src/modules/Core.js'
+import TimeScale from 'apexcharts/src/modules/TimeScale.js'
 /**
  *
  */
@@ -85,6 +88,17 @@ interface LineTotalPoint {
   atr?: { trLine: number; atrLine: number }
   mfi?: number
   macd?: number
+}
+/**
+ *
+ */
+interface TimescaleProps {
+  dateString: string
+  position: number
+  value: string
+  unit: string
+  year: number
+  month: number
 }
 // Define the type for the series data array
 export interface CandlestickChartProps {
@@ -390,7 +404,10 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
   const breakpoint = 768 // Example breakpoint for mobile/desktop
   const isMobile = width && width <= breakpoint ? true : false
   const [buttonClicked, setButtonClicked] = useState(false)
-  const chartRef = useRef(null)
+  interface ChartRefProp {
+    ctx: Core | null
+  }
+  const [chartRef] = useState<ChartRefProp>({ ctx: null })
   const { theme, setTheme, resolvedTheme } = useTheme()
   const lineTotalData: LineTotalPoint[] = getTotalData(D, 'VOL')
   // console.log('CandlestickChart IN lineTotalData', lineTotalData)
@@ -528,8 +545,9 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
       events: {
         mounted: (chartContext) => {
           console.log('Chart Mounted, chartContext', chartContext)
+          console.log('Chart Mounted, chartContext type ', typeof chartContext)
           // Capture the context on mount
-          chartRef.current = chartContext
+          chartRef.ctx = chartContext
         },
       },
       animations: {
@@ -721,28 +739,113 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
         D2.push({ x: L.x, y: L.v })
       }
     }
+    /**
+     * handling 5D timeseries gaps is still not working yet.
+     * Try harder
+     */
+    const timescaleLabels: TimescaleProps[] = [] as TimescaleProps[]
+    const dateTime = new DateTime(chartRef.ctx)
+    /**
+    if (B.button !== undefined && B.button === '5 D') {
+      if (chartRef.ctx !== null) {
+        console.log('handleButtonClicked use apexChart to generate special labels')
+        let minX = 0
+        let maxX = 0
+        const TS = lineTotalData.map((d) => d.x.getTime())
+        minX = Math.min(...TS)
+        maxX = Math.max(...TS)
+        console.log('maxX, minX', new Date(maxX), new Date(minX))
+        const ts = new TimeScale(chartRef.ctx)
+        const timeScale = ts.calculateTimeScaleTicks(minX, maxX)
+        console.log('timeScale', timeScale)
+        // ts.recalcDimensionsBasedOnFormat(timeScale)
+        // timescaleLabels = chartRef.ctx.w.globals.timescaleLabels
+        timescaleLabels = ts.formatDates(timeScale).slice()
+        //ts.timescaleArray = []
+        console.log('timescaleLabels', timescaleLabels)
+      }
+    }*/
+    /**
+     *
+     */
+    const commonXAxis = (D: LVProps[]): ApexXAxis => {
+      console.log('commonXAxis timescaleLabels.length', timescaleLabels.length)
+      const v: ApexXAxis = {
+        type: timescaleLabels.length > 0 ? 'category' : 'datetime',
+        labels: {
+          rotate: 0,
+          datetimeUTC: false, // Set to false to use local time zone
+          formatter:
+            timescaleLabels.length === 0
+              ? undefined
+              : function (val) {
+                  if (val) {
+                    console.log('commonXAxis,val', val)
+                    const vt = dateTime.parseDate(val)
+                    for (let i = 0; i < timescaleLabels.length; i++) {
+                      const ts = dateTime.parseDate(timescaleLabels[i].dateString)
+                      if (Math.abs((ts - vt) / 60000) < 500) return timescaleLabels[i].value
+                    }
+                  }
+                  return ''
+                },
+        },
+        categories: D.map((t) => t.x.toISOString()),
+      }
+      if (timescaleLabels.length === 0 && v.labels) {
+        console.log('v.labels', v.labels)
+        delete v.labels
+      }
+      console.log('commonXAxis option', v)
+      return v
+    }
+    /**
+     *
+     */
+    const commonTitle = (titleName) => {
+      const v = {
+        ...Options.title, // Spread existing title options if any
+        text: titleName,
+      }
+      return v
+    }
+    /**
+     *
+     */
+    const commonSubTitle = (subtitleName) => {
+      const v = {
+        ...Options.subtitle,
+        text: subtitleName,
+      }
+      return v
+    }
+    /**
+     *
+     */
     const setTwoSeriesOptions = (series1, series2, yAxis1, yAxis2, annotations?) => {
       setOptionsArray([
         {
           type: 'line',
           options: {
-            ...Options, // Spread existing options to preserve other settings
             series: [series1, series2],
             yaxis: [yAxis1, yAxis2],
-            title: {
-              ...Options.title, // Spread existing title options if any
-              text: O.title,
-            },
-            subtitle: {
-              ...Options.subtitle, // Spread existing subtitle options if any
-              text: O.D.meta.longName,
-            },
+            xaxis: commonXAxis(D1),
+            title: commonTitle(O.title),
+            subtitle: commonSubTitle(O.D.meta.longName),
             annotations: {},
           },
         },
       ])
     }
-    const setThreeSeriesOptionsOneChart = (series1, series2, series3, yAxis1, yAxis2, yAxis3) => {
+    const setThreeSeriesOptionsOneChart = (
+      series1,
+      series2,
+      series3,
+      yAxis1,
+      yAxis2,
+      yAxis3,
+      D
+    ) => {
       setOptionsArray([
         {
           type: 'line',
@@ -750,19 +853,16 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
             ...Options, // Spread existing options to preserve other settings
             series: [series1, series2, series3],
             yaxis: [yAxis1, yAxis2, yAxis3],
-            title: {
-              ...Options.title, // Spread existing title options if any
-              text: O.title,
-            },
-            subtitle: {
-              ...Options.subtitle, // Spread existing subtitle options if any
-              text: O.D.meta.longName,
-            },
+            xaxis: commonXAxis(D),
+            title: commonTitle(O.title),
+            subtitle: commonSubTitle(O.D.meta.longName),
           },
         },
       ])
     }
-    // const extraD: (number | null)[] = [] as (number | null)[]
+    /**
+     *
+     */
     switch (B.id) {
       case 'button-VOL':
       case 'VOL':
@@ -845,14 +945,9 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
                 ...Options, // Spread existing options to preserve other settings
                 series: [seriesLine, seriesLine2],
                 yaxis: [yAxis1, yAxis3],
-                title: {
-                  ...Options.title, // Spread existing title options if any
-                  text: O.title,
-                },
-                subtitle: {
-                  ...Options.subtitle, // Spread existing subtitle options if any
-                  text: O.D.meta.longName,
-                },
+                xaxis: commonXAxis(D1),
+                title: commonTitle(O.title),
+                subtitle: commonSubTitle(O.D.meta.longName),
                 stroke: {
                   lineCap: 'round',
                   curve: ['smooth', 'stepline'],
@@ -873,14 +968,9 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
                   },
                 ],
                 yaxis: [yAxisAO],
-                title: {
-                  ...Options.title, // Spread existing title options if any
-                  text: O.title,
-                },
-                subtitle: {
-                  ...Options.subtitle, // Spread existing subtitle options if any
-                  text: O.D.meta.longName,
-                },
+                xaxis: commonXAxis(D3),
+                title: commonTitle(O.title),
+                subtitle: commonSubTitle(O.D.meta.longName),
                 plotOptions: {
                   line: {
                     colors: {
@@ -939,7 +1029,15 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
               text: 'kijun',
             },
           }
-          setThreeSeriesOptionsOneChart(seriesLine, series3, seriesLine2, yAxis1, yAxis4, yAxis3)
+          setThreeSeriesOptionsOneChart(
+            seriesLine,
+            series3,
+            seriesLine2,
+            yAxis1,
+            yAxis4,
+            yAxis3,
+            D1
+          )
         }
         break
       case 'PPO':
@@ -976,14 +1074,9 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
                 ...Options, // Spread existing options to preserve other settings
                 series: [seriesLine, seriesLine2],
                 yaxis: [yAxis1, yAxis3],
-                title: {
-                  ...Options.title, // Spread existing title options if any
-                  text: O.title,
-                },
-                subtitle: {
-                  ...Options.subtitle, // Spread existing subtitle options if any
-                  text: O.D.meta.longName,
-                },
+                xaxis: commonXAxis(D1),
+                title: commonTitle(O.title),
+                subtitle: commonSubTitle(O.D.meta.longName),
               },
             },
             {
@@ -1011,24 +1104,14 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
                   },
                 ],
                 yaxis: [yAxisSignal, yAxisHistogram],
-                xaxis: {
-                  type: 'datetime',
-                  labels: {
-                    datetimeUTC: false, // Set to false to use local time zone
-                  },
-                  categories: D1.map((t) => t.x.toISOString()),
-                },
+                xaxis: commonXAxis(D4),
                 stroke: {
+                  lineCap: 'round',
+                  width: [2, 2], // Line width for price series, 0 for volume series
                   curve: 'smooth',
                 },
-                title: {
-                  ...Options.title, // Spread existing title options if any
-                  text: O.title,
-                },
-                subtitle: {
-                  ...Options.subtitle, // Spread existing subtitle options if any
-                  text: O.D.meta.longName,
-                },
+                title: commonTitle(O.title),
+                subtitle: commonSubTitle(O.D.meta.longName),
               },
             },
           ])
@@ -1044,15 +1127,12 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
             D4.push({ x: L.x, y: pvo ? pvo.signal : null })
             D5.push({ x: L.x, y: pvo ? pvo.histogram : null })
           }
+          console.log('PVO signal D4', D4)
           if (yAxis3.title) yAxis3.title.text = 'PVO'
           seriesLine.data = D1
           seriesLine2.data = D3
           seriesLine2.name = 'PVO'
           seriesLine2.color = '#A2E635'
-          // const yAxisSignal = yAxis1
-          // const yAxisHistogram = yAxis3
-          // if (yAxisSignal.title) yAxisSignal.title.text = 'Signal'
-          // if (yAxisHistogram.title) yAxisHistogram.title.text = 'Histogram'
           const yAxisSignal: ApexYAxis = {
             ...yAxis1,
             title: {
@@ -1072,14 +1152,9 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
                 ...Options, // Spread existing options to preserve other settings
                 series: [seriesLine, seriesLine2],
                 yaxis: [yAxis1, yAxis3],
-                title: {
-                  ...Options.title, // Spread existing title options if any
-                  text: O.title,
-                },
-                subtitle: {
-                  ...Options.subtitle, // Spread existing subtitle options if any
-                  text: O.D.meta.longName,
-                },
+                xaxis: commonXAxis(D1),
+                title: commonTitle(O.title),
+                subtitle: commonSubTitle(O.D.meta.longName),
               },
             },
             {
@@ -1107,28 +1182,14 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
                   },
                 ],
                 yaxis: [yAxisSignal, yAxisHistogram],
-                xaxis: {
-                  type: 'datetime',
-                  labels: {
-                    datetimeUTC: false, // Set to false to use local time zone
-                    //formatter: function (val) {
-                    //  console.log('formatter', val)
-                    //  return val
-                    //},
-                  },
-                  categories: D1.map((t) => t.x.toISOString()),
-                },
+                xaxis: commonXAxis(D1),
                 stroke: {
+                  lineCap: 'round',
+                  width: [2, 2], // Line width for price series, 0 for volume series
                   curve: 'smooth',
                 },
-                title: {
-                  ...Options.title, // Spread existing title options if any
-                  text: O.title,
-                },
-                subtitle: {
-                  ...Options.subtitle, // Spread existing subtitle options if any
-                  text: O.D.meta.longName,
-                },
+                title: commonTitle(O.title),
+                subtitle: commonSubTitle(O.D.meta.longName),
               },
             },
           ])
@@ -1228,19 +1289,14 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
                 ...Options, // Spread existing options to preserve other settings
                 series: [seriesLine, seriesLine2],
                 yaxis: [yAxis1, yAxis3],
-                title: {
-                  ...Options.title, // Spread existing title options if any
-                  text: O.title,
-                },
+                xaxis: commonXAxis(D1),
+                title: commonTitle(O.title),
                 stroke: {
                   lineCap: 'round',
                   curve: ['smooth', 'stepline'],
                   width: [2, 3], // Line width for price series, 0 for volume series
                 },
-                subtitle: {
-                  ...Options.subtitle, // Spread existing subtitle options if any
-                  text: O.D.meta.longName,
-                },
+                subtitle: commonSubTitle(O.D.meta.longName),
               },
             },
           ])
@@ -1265,14 +1321,9 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
               ...Options, // Spread existing options to preserve other settings
               series: [seriesLine, seriesLine2],
               yaxis: [yAxis1, yAxis3],
-              title: {
-                ...Options.title, // Spread existing title options if any
-                text: O.title,
-              },
-              subtitle: {
-                ...Options.subtitle, // Spread existing subtitle options if any
-                text: O.D.meta.longName,
-              },
+              xaxis: commonXAxis(D1),
+              title: commonTitle(O.title),
+              subtitle: commonSubTitle(O.D.meta.longName),
             },
           },
         ])
@@ -1295,14 +1346,9 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
               ...Options, // Spread existing options to preserve other settings
               series: [seriesLine, seriesLine2],
               yaxis: [yAxis1, yAxis3],
-              title: {
-                ...Options.title, // Spread existing title options if any
-                text: O.title,
-              },
-              subtitle: {
-                ...Options.subtitle, // Spread existing subtitle options if any
-                text: O.D.meta.longName,
-              },
+              xaxis: commonXAxis(D1),
+              title: commonTitle(O.title),
+              subtitle: commonSubTitle(O.D.meta.longName),
             },
           },
         ])
@@ -1322,17 +1368,12 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ title, D }) => {
           {
             type: 'line',
             options: {
-              ...Options, // Spread existing options to preserve other settings
+              ...Options,
               series: [seriesLine, seriesLine2],
               yaxis: [yAxis1, yAxis3],
-              title: {
-                ...Options.title, // Spread existing title options if any
-                text: O.title,
-              },
-              subtitle: {
-                ...Options.subtitle, // Spread existing subtitle options if any
-                text: O.D.meta.longName,
-              },
+              xaxis: commonXAxis(D1),
+              title: commonTitle(O.title),
+              subtitle: commonSubTitle(O.D.meta.longName),
             },
           },
         ])
